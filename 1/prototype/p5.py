@@ -6,6 +6,7 @@ def plot3D(x, y, z):
   fig = plt.figure()
   ax = fig.gca(projection='3d')
   surf = ax.plot_surface(x, y, z)
+  plt.colorbar(surf)
   plt.show()
   
 def plotError(x, y, u, u_a):
@@ -16,17 +17,29 @@ def plotError(x, y, u, u_a):
 #%%
 def JacobiLoop(U, F, h, N_iter):
   Nx, Ny, Nz = U.shape
-  for it in range(N_iter):
-    print(it)
+  for n in range(N_iter):
+    print(n)
     for i in range(1, Nx - 1):
       for j in range(1, Ny - 1):
         for k in range(1, Nz - 1):
           U[i,j,k] = 1/6 * (U[i+1,j,k] + U[i-1,j,k] + U[i,j+1,k] + U[i,j-1,k] + U[i,j,k+1] + U[i,j,k-1] - h ** 2 * F[i, j, k]) 
           
 def JacobiVec(U, F, h, N_iter):
-  for it in range(N_iter):
+  for n in range(N_iter):
     U[1:-1,1:-1,1:-1] = 1/6 * (U[2:,1:-1,1:-1] + U[:-2,1:-1,1:-1] + U[1:-1,2:,1:-1] + U[1:-1,:-2,1:-1] + U[1:-1,1:-1,2:] + U[1:-1,1:-1,:-2] - h ** 2 * F[1:-1,1:-1,1:-1])
 
+def SOR(U0, F, h, N_iter, w=0.5):
+  Nx, Ny, Nz = U0.shape
+  U = np.zeros((2, Nx, Ny, Nz))
+  U[0] = np.copy(U0)
+  n = 0
+  for it in range(N_iter - 1):
+    for i in range(1, Nx - 1):
+      for j in range(1, Ny - 1):
+        for k in range(1, Nz - 1):
+          U[n+1,i,j,k] = (1 - w) * U[n,i,j,k] + w / 6 * (U[n,i+1,j,k] + U[n+1,i-1,j,k] + U[n,i,j+1,k] + U[n+1,i,j-1,k] + U[n,i,j,k+1] + U[n+1,i,j,k-1] - h ** 2 * F[i,j,k])
+  return U[-1]
+  
 #%%
 # Analityc solution
 p = lambda x, y, z, k: (1 - np.exp(k * x * y * z * (1 - x) * (1 - y) * (1 - z))) / (1 - np.exp(k / 64))
@@ -93,3 +106,13 @@ plotError(X_f, Y_f, p(X_f, Y_f, np.ones_like(X_f) * 0.8, r),  U_f[:,:,40])
 # Error
 print("L2 norm:", np.linalg.norm((p(x_f, y_f, z_f, r) - U_f).flatten()))
 print("L_inf norm: ", np.linalg.norm((p(x_f, y_f, z_f, r) - U_f).flatten(), np.inf))
+
+
+#%%
+N_iter = 5000
+U0_c = np.zeros((Nx_c + 1, Ny_c + 1, Nz_c + 1))
+U_s = SOR(U0_c, F_c, h_c, N_iter, w=1.1)
+#%%
+# Plots      
+plot3D(X_c, Y_c, p(X_c, Y_c, np.ones_like(X_c) * 0.8, r))        
+plot3D(X_c, Y_c, U_s[:,:,16]) 

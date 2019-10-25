@@ -47,16 +47,19 @@ def r(p1, p2):
 def CE(p):
   rij = 1
   N = len(p) // 2
-  for j in range(N - 1):
-    for i in range(N - 1):
+  for j in range(N):
+    for i in range(N):
       if i != j:
         p1 = p[2*i:2*(i+1)]
-        p2 = p[2*(i+1):2*(i+2)]
+        p2 = p[2*j:2*(j+1)]
         rij *= np.sqrt(r(p1, p2))
   return rij
 
 def R(U):
   return np.array([CE(U[k]) for k in range(len(U))])
+
+def RR(P1, P2):
+  return np.array([r(P1[k], P2[k]) for k in range(len(P1))])
 
 def plot(U):
   M, N = U.shape
@@ -126,6 +129,10 @@ plotR(t_1, R3)
 plotR(t_1, R4)
 plotR(t_2, R5a)
 plotR(t_2, R5b)
+#%%
+#R5a_1 = R2()
+#plt.plot()
+
 #%%
 RT1 = np.zeros((len(R1), 2)); RT1[:,0] = t_1; RT1[:,1] = R1
 RT2 = np.zeros((len(R2), 2)); RT2[:,0] = t_1; RT2[:,1] = R2
