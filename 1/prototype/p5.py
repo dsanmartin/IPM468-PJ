@@ -2,6 +2,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 #%%
+# Analityc solution
+p = lambda x, y, z, k: (1 - np.exp(k * x * y * z * (1 - x) * (1 - y) * (1 - z))) / (1 - np.exp(k / 64))
+
+# RHS 
+f = lambda x, y, z, k: (-2*k*y*z*(1-y)*(1-z) + (k*y*z*(1-y)*(1-z)*(1-2*x))**2 - 2*k*x*z*(1-z)*(1-x) + (k*z*x*(1-z)*(1-x)*(1-2*y))**2  - 2*k*x*y*(1-x)*(1-y) + (k*x*y*(1-x)*(1-y)*(1-2*z))**2) * (-np.exp(k*x*y*z*(1-x)*(1-y)*(1-z))/(1-np.exp(k/64))) 
+
+#%%
 def plot3D(x, y, z):
   fig = plt.figure()
   ax = fig.gca(projection='3d')
@@ -15,18 +22,22 @@ def plotError(x, y, u, u_a):
   plt.plot()
   
 #%%
-def JacobiLoop(U, F, h, N_iter):
+def JacobiLoop(U0, F, h, N_iter):
+  U = np.copy(U0)
   Nx, Ny, Nz = U.shape
   for n in range(N_iter):
     print(n)
     for i in range(1, Nx - 1):
       for j in range(1, Ny - 1):
         for k in range(1, Nz - 1):
-          U[i,j,k] = 1/6 * (U[i+1,j,k] + U[i-1,j,k] + U[i,j+1,k] + U[i,j-1,k] + U[i,j,k+1] + U[i,j,k-1] - h ** 2 * F[i, j, k]) 
+          U[i,j,k] = 1/6 * (U[i+1,j,k] + U[i-1,j,k] + U[i,j+1,k] + U[i,j-1,k] + U[i,j,k+1] + U[i,j,k-1] - h ** 2 * F[i, j, k])    
+  return U
           
-def JacobiVec(U, F, h, N_iter):
+def JacobiVec(U0, F, h, N_iter):
+  U = np.copy(U0)
   for n in range(N_iter):
     U[1:-1,1:-1,1:-1] = 1/6 * (U[2:,1:-1,1:-1] + U[:-2,1:-1,1:-1] + U[1:-1,2:,1:-1] + U[1:-1,:-2,1:-1] + U[1:-1,1:-1,2:] + U[1:-1,1:-1,:-2] - h ** 2 * F[1:-1,1:-1,1:-1])
+  return U
 
 def SOR(U0, F, h, N_iter, w=0.5):
   Nx, Ny, Nz = U0.shape
@@ -38,81 +49,58 @@ def SOR(U0, F, h, N_iter, w=0.5):
       for j in range(1, Ny - 1):
         for k in range(1, Nz - 1):
           U[n+1,i,j,k] = (1 - w) * U[n,i,j,k] + w / 6 * (U[n,i+1,j,k] + U[n+1,i-1,j,k] + U[n,i,j+1,k] + U[n+1,i,j-1,k] + U[n,i,j,k+1] + U[n+1,i,j,k-1] - h ** 2 * F[i,j,k])
+    U[0] = np.copy(U[n+1])
   return U[-1]
   
+def experiment(f, r, Nx, Ny, Nz, N_iter, solver, w=0.5):
+  x = np.linspace(0, 1, Nx + 1)
+  y = np.linspace(0, 1, Ny + 1)
+  z = np.linspace(0, 1, Nz + 1)
+  
+  X, Y = np.meshgrid(x, y)
+  X3, Y3, Z3 = np.meshgrid(x, y, z)
+  
+  # Parameters
+  h = x[1] - x[0] # h = dx = dy = dz
+  F = f(X3, Y3, Z3, r)
+  
+  U0 = np.zeros((Nx + 1, Ny + 1, Nz + 1)) # Initial u including BC
+  U = solver(U0, F, h, N_iter)
+  
+  return X, Y, X3, Y3, Z3, U
+  
 #%%
-# Analityc solution
-p = lambda x, y, z, k: (1 - np.exp(k * x * y * z * (1 - x) * (1 - y) * (1 - z))) / (1 - np.exp(k / 64))
-
-# RHS 
-f = lambda x, y, z, k: (-2*k*y*z*(1-y)*(1-z) + (k*y*z*(1-y)*(1-z)*(1-2*x))**2 - 2*k*x*z*(1-z)*(1-x) + (k*z*x*(1-z)*(1-x)*(1-2*y))**2  - 2*k*x*y*(1-x)*(1-y) + (k*x*y*(1-x)*(1-y)*(1-2*z))**2) * (-np.exp(k*x*y*z*(1-x)*(1-y)*(1-z))/(1-np.exp(k/64))) 
-
 # Function parameter (k)
 r = 1 
-#%% COARSE MESH
-Nx_c, Ny_c, Nz_c = 20, 20, 20
-x_c = np.linspace(0, 1, Nx_c + 1)
-y_c = np.linspace(0, 1, Ny_c + 1)
-z_c = np.linspace(0, 1, Nz_c + 1)
-
-X_c, Y_c = np.meshgrid(x_c, y_c)
-X3_c, Y3_c, Z3_c = np.meshgrid(x_c, y_c, z_c)
-
-# Parameters
-h_c = x_c[1] - x_c[0] # h = dx = dy = dz
-F_c = f(X3_c, Y3_c, Z3_c, r)
-
-#%% Solve 
-N_iter = 1000
-U_c = np.zeros((Nx_c + 1, Ny_c + 1, Nz_c + 1)) # Initial u including BC
-JacobiVec(U_c, F_c, h_c, N_iter)
+#%% Coarse mesh using Jacobi
+Xc, Yc, X3c, Y3c, Z3c, Uc = experiment(f, r, 20, 20, 20, 1000, JacobiVec)
 
 #%%
 # Plot u(x,y,0.8)
-plot3D(X_c, Y_c, p(X_c, Y_c, np.ones_like(X_c) * 0.8, r))        
-plot3D(X_c, Y_c, U_c[:,:,16])    
-
-#%% 
-plotError(X_c, Y_c, p(X_c, Y_c, np.ones_like(X_c) * 0.8, r),  U_c[:,:,16])
+plot3D(Xc, Yc, p(Xc, Yc, np.ones_like(Xc) * 0.8, r))        
+plot3D(Xc, Yc, Uc[:,:,16])    
+plotError(Xc, Yc, p(Xc, Yc, np.ones_like(Xc) * 0.8, r),  Uc[:,:,16])
         
 # Error
-print("L2 norm:", np.linalg.norm((p(x_c, y_c, z_c, r) - U_c).flatten()))
-print("L_inf norm: ", np.linalg.norm((p(x_c, y_c, z_c, r) - U_c).flatten(), np.inf))
-
-#%% FINE MESH
-Nx_f, Ny_f, Nz_f = 50, 50, 50
-x_f = np.linspace(0, 1, Nx_f + 1)
-y_f = np.linspace(0, 1, Ny_f + 1)
-z_f = np.linspace(0, 1, Nz_f + 1)
-
-X_f, Y_f = np.meshgrid(x_f, y_f)
-X3_f, Y3_f, Z3_f = np.meshgrid(x_f, y_f, z_f)
-
-h_f = x_f[1] - x_f[0] # h = dx = dy = dz
-F_f = f(X3_f, Y3_f, Z3_f, r) # THS evaluation
-
-#%% Solve fine mesh
-N_iter = 5000
-U_f = np.zeros((Nx_f + 1, Ny_f + 1, Nz_f + 1))  # Initial u including BC
-JacobiVec(U_f, F_f, h_f, N_iter)
+print("L2 norm:", np.linalg.norm((p(X3c, Y3c, Z3c, r) - Uc).flatten()))
+print("L_inf norm: ", np.linalg.norm((p(X3c, Y3c, Z3c, r) - Uc).flatten(), np.inf))
+#%% Fine mesh using Jacobi
+Xf, Yf, X3f, Y3f, Z3f, Uf = experiment(f, r, 50, 50, 50, 5000, JacobiVec)
 
 #%%
 # Plots      
-plot3D(X_f, Y_f, p(X_f, Y_f, np.ones_like(X_f) * 0.8, r))        
-plot3D(X_f, Y_f, U_f[:,:,40])    
-#%%
-plotError(X_f, Y_f, p(X_f, Y_f, np.ones_like(X_f) * 0.8, r),  U_f[:,:,40])
+plot3D(Xf, Yf, p(Xf, Yf, np.ones_like(Xf) * 0.8, r))        
+plot3D(Xf, Yf, Uf[:,:,40])    
+plotError(Xf, Yf, p(Xf, Yf, np.ones_like(Xf) * 0.8, r), Uf[:,:,40])
         
 # Error
-print("L2 norm:", np.linalg.norm((p(x_f, y_f, z_f, r) - U_f).flatten()))
-print("L_inf norm: ", np.linalg.norm((p(x_f, y_f, z_f, r) - U_f).flatten(), np.inf))
+print("L2 norm:", np.linalg.norm((p(X3f, Y3f, Z3f, r) - Uf).flatten()))
+print("L_inf norm: ", np.linalg.norm((p(X3f, Y3f, Z3f, r) - Uf).flatten(), np.inf))
 
+#%% Coarse mesh using Relaxation
+Xc_r, Yc_r, X3c_r, Y3c_r, Z3c_r, Uc_r = experiment(f, r, 20, 20, 20, 500, SOR, w=.5)
 
-#%%
-N_iter = 5000
-U0_c = np.zeros((Nx_c + 1, Ny_c + 1, Nz_c + 1))
-U_s = SOR(U0_c, F_c, h_c, N_iter, w=1.1)
 #%%
 # Plots      
-plot3D(X_c, Y_c, p(X_c, Y_c, np.ones_like(X_c) * 0.8, r))        
-plot3D(X_c, Y_c, U_s[:,:,16]) 
+plot3D(Xc_r, Yc_r, p(Xc_r, Yc_r, np.ones_like(Xc_r) * 0.8, r))        
+plot3D(Xc_r, Yc_r, Uc_r[:,:,16]) 

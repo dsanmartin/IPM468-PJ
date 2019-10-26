@@ -75,6 +75,7 @@ def experiment(h):
   
   # Solve
   u = ConjugateGradient(A, b, x0)
+  #u = np.linalg.solve(A, b)
   
   # Numerical solution
   U = np.copy(P) # Boundary
@@ -90,11 +91,42 @@ X3, Y3, U3, P3 = experiment(0.025)
 #%%
 plot2D(X1, Y1, U1)
 plot2D(X1, Y1, P1)
+plot2D(X1, Y1, np.abs(U1-P1))
 
 #%%
 plot2D(X2, Y2, U2)
 plot2D(X2, Y2, P2)
+plot2D(X2, Y2, np.abs(U2 - P2))
 
 #%%
 plot2D(X3, Y3, U3)
 plot2D(X3, Y3, P3)
+plot2D(X3, Y3, np.abs(U3-P3))
+
+#%%
+e1 = np.linalg.norm((U1-P1).flatten(), np.inf)
+e2 = np.linalg.norm((U2-P2).flatten(), np.inf)
+e3 = np.linalg.norm((U3-P3).flatten(), np.inf)
+
+print(e1, e2, e3)
+#%%
+M1, N1 = U1.shape
+M2, N2 = U2.shape
+M3, N3 = U3.shape
+
+U1f = np.zeros((M1 * N1, 3)); U1f[:,0] = X1.flatten(); U1f[:,1] = Y1.flatten(); U1f[:,2] = U1.flatten()
+U2f = np.zeros((M2 * N2, 3)); U2f[:,0] = X2.flatten(); U2f[:,1] = Y2.flatten(); U2f[:,2] = U2.flatten()
+U3f = np.zeros((M3 * N3, 3)); U3f[:,0] = X3.flatten(); U3f[:,1] = Y3.flatten(); U3f[:,2] = U3.flatten()
+E1f = np.zeros((M1 * N1, 3)); E1f[:,0] = X1.flatten(); E1f[:,1] = Y1.flatten(); E1f[:,2] = np.abs(U1-P1).flatten()
+E2f = np.zeros((M2 * N2, 3)); E2f[:,0] = X2.flatten(); E2f[:,1] = Y2.flatten(); E2f[:,2] = np.abs(U2-P2).flatten()
+E3f = np.zeros((M3 * N3, 3)); E3f[:,0] = X3.flatten(); E3f[:,1] = Y3.flatten(); E3f[:,2] = np.abs(U3-P3).flatten()
+
+#%% Save data
+DIR = 'data/5/'
+np.savetxt(DIR + 'U1.csv', U1f, fmt='%.8f', delimiter=' ')#, header='x,y,u', comments="")
+np.savetxt(DIR + 'U2.csv', U2f, fmt='%.8f', delimiter=' ')#, header='x,y,u', comments="")
+np.savetxt(DIR + 'U3.csv', U3f, fmt='%.8f', delimiter=' ')#, header='x,y,u', comments="")
+np.savetxt(DIR + 'E1.csv', E1f, fmt='%.8f', delimiter=' ')#, header='x,y,u', comments="")
+np.savetxt(DIR + 'E2.csv', E2f, fmt='%.8f', delimiter=' ')#, header='x,y,u', comments="")
+np.savetxt(DIR + 'E3.csv', E3f, fmt='%.8f', delimiter=' ')#, header='x,y,u', comments="")
+

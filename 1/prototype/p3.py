@@ -1,5 +1,5 @@
 """
-  Question 3 prototype (only testing...)
+  Question 3 prototype
 """
 import numpy as np
 import matplotlib.pyplot as plt
@@ -130,8 +130,15 @@ plotR(t_1, R4)
 plotR(t_2, R5a)
 plotR(t_2, R5b)
 #%%
-#R5a_1 = R2()
-#plt.plot()
+origin = np.zeros((len(t_2), 2))
+
+#%%
+R5a_d = RR(origin, U5a[:,2:4])
+plotR(t_2, R5a_d)
+
+#%%
+R5b_d = RR(origin, U5b[:,2:4])
+plotR(t_2, R5b_d)
 
 #%%
 RT1 = np.zeros((len(R1), 2)); RT1[:,0] = t_1; RT1[:,1] = R1
@@ -140,6 +147,9 @@ RT3 = np.zeros((len(R3), 2)); RT3[:,0] = t_1; RT3[:,1] = R3
 RT4 = np.zeros((len(R4), 2)); RT4[:,0] = t_1; RT4[:,1] = R4
 RT5a = np.zeros((len(R5a), 2)); RT5a[:,0] = t_2; RT5a[:,1] = R5a
 RT5b = np.zeros((len(R5b), 2)); RT5b[:,0] = t_2; RT5b[:,1] = R5b
+RT5Da = np.zeros((len(R5a_d), 2)); RT5Da[:,0] = t_2; RT5Da[:,1] = R5a_d
+RT5Db = np.zeros((len(R5b_d), 2)); RT5Db[:,0] = t_2; RT5Db[:,1] = R5b_d
+
 #%% SAVE
 DIR = 'data/3/'
 np.savetxt(DIR + 'U1.csv', U1, fmt='%.8f', delimiter=',', header='x1,y1,x2,y2,x3,y3,x4,y4', comments="")
@@ -154,3 +164,5 @@ np.savetxt(DIR + 'R3.csv', RT3, fmt='%.8f', delimiter=',', header='t,r', comment
 np.savetxt(DIR + 'R4.csv', RT4, fmt='%.8f', delimiter=',', header='t,r', comments="")
 np.savetxt(DIR + 'R5a.csv', RT5a, fmt='%.8f', delimiter=',', header='t,r', comments="")
 np.savetxt(DIR + 'R5b.csv', RT5b, fmt='%.8f', delimiter=',', header='t,r', comments="")
+np.savetxt(DIR + 'R5Da.csv', RT5Da, fmt='%.8f', delimiter=',', header='t,r', comments="")
+np.savetxt(DIR + 'R5Db.csv', RT5Db, fmt='%.8f', delimiter=',', header='t,r', comments="")
