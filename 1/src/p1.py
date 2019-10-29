@@ -1,36 +1,49 @@
 """
-  Question 1 prototype (only testing...)
+  Question 1: Partial Harmonic Series
 """
 import numpy as np
 import matplotlib.pyplot as plt
 #%% Functions
-# Naive
+# Naive (using loop)
 def f(N):
   A = 0
   for n in range(1, N + 1):
     A += 1 / n
   return A
 
-# Pythonic
+# Vectorized (to get faster results)
 fv = lambda n: np.sum(1 / n)
-#%% Experiments
-EXP = 25
-Ns = np.array([2 ** i for i in range(EXP+1)])
-#As = np.array([f(Ns[i]) for i in range(len(Ns))])
-Avs = np.array([fv(np.arange(1, n+1)) for n in Ns])
-plt.plot(Ns, Avs)
+
+#%% Experiments. Compute some values of series
+EXP = 28
+Ns = np.array([2 ** i for i in range(EXP, EXP+1)]) # N = {2^0, 2^1, ..., 2^EXP}
+
+# Using loop (slow but for N too large may be stored in memory...)
+#As = np.array([f(n) for n in Ns], dtype=np.float32)
+#Ad = np.array([f(n) for n in Ns], dtype=np.float64)
+
+# Using vectorized implementation (faster but dangerous with memory usage...)
+As = np.array([fv(np.arange(1, n+1)) for n in Ns], dtype=np.float32) # Compute summation with single precision
+Ad = np.array([fv(np.arange(1, n+1)) for n in Ns], dtype=np.float64) # Compute summation with double precision
+diff = np.abs(As-Ad) # Absolute value of difference between single and double precision (a simple measure)
+
+#%% Plot both summations
+plt.plot(Ns, As)
+plt.plot(Ns, Ad)
 plt.grid(True)
 plt.show()
-print(Avs[-1])
-#%% For PGFPlot
-for i in range(len(Ns)):
-  print("%d %f" % (Ns[i], Avs[i]))
-##%%
-#N = 2**25
-#n = np.arange(1, N + 1)
-#A = np.array([fv(np.arange(1, i + )) for i in n])
-##%%
-#%matplotlib inline
-#plt.plot(n, A)
-#plt.show()
-#print(A[-1])
+#%% Plot difference
+plt.plot(Ns, diff)
+plt.grid(True)
+plt.yscale('log')
+plt.show()
+
+#%% Data to save
+series = np.zeros((len(Ns), 4))
+series[:,0] = Ns
+series[:,1] = As
+series[:,2] = Ad
+series[:,3] = diff
+#%% Save data for plots
+DIR = 'data/1/'
+np.savetxt(DIR + 'series.csv', series, fmt='%.16f', delimiter=',', header='N,As,Ad,dif', comments="")

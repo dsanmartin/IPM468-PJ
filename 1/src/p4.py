@@ -34,54 +34,58 @@ def solveSystem():
   
 
 
-def createMatricesBK(n, h):
-  # A matrix
-  A = np.zeros((n, n))
-  np.fill_diagonal(A[1:], 1) # lower diagonal
-  A += A.T # upper diagonal
-  np.fill_diagonal(A, 10) # main diagonal
-  A[0,:2] = np.array([1, 3.08510638]) 
-  A[-1,-2:] = np.array([-3.08510638, -1]) 
-
-  # B matrix
-  B = np.zeros((n, n))
-  np.fill_diagonal(B[1:], -6)
-  B += B.T
-  np.fill_diagonal(B, 12)
-  #B[0,:2] = np.array([6, -6])
-  #B[-1,-2:] = np.array([-6, 6])
-  B[0,:4] = np.array([-1.14893617, -1.27659574,  2.42553191,  h*0.12765957])
-  B[-1,-4:] = -np.array([-1.14893617, -1.27659574,  2.42553191,  h*0.12765957])
-  
-  B *= -2 / h ** 2 
-  #print(A); print(B)
-
-  return A, B
+#def createMatricesBK(n, h):
+#  # A matrix
+#  A = np.zeros((n, n))
+#  np.fill_diagonal(A[1:], 1) # lower diagonal
+#  A += A.T # upper diagonal
+#  np.fill_diagonal(A, 10) # main diagonal
+#  A[0,:2] = np.array([1, 3.08510638]) 
+#  A[-1,-2:] = np.array([-3.08510638, -1]) 
+#
+#  # B matrix
+#  B = np.zeros((n, n))
+#  np.fill_diagonal(B[1:], -6)
+#  B += B.T
+#  np.fill_diagonal(B, 12)
+#  #B[0,:2] = np.array([6, -6])
+#  #B[-1,-2:] = np.array([-6, 6])
+#  B[0,:4] = np.array([-1.14893617, -1.27659574,  2.42553191,  h*0.12765957])
+#  B[-1,-4:] = -np.array([-1.14893617, -1.27659574,  2.42553191,  h*0.12765957])
+#  
+#  B *= -2 / h ** 2 
+#  #print(A); print(B)
+#
+#  return A, B
 
 
 def createMatrices(n, h):
   # A matrix
   A = np.zeros((n, n))
-  np.fill_diagonal(A[1:], 10) # lower diagonal
+  np.fill_diagonal(A[1:], 1)#1/10) # lower diagonal
   A += A.T # upper diagonal
-  np.fill_diagonal(A, 1) # main diagonal
+  np.fill_diagonal(A, 10)#1) # main diagonal
   #A[0,:2] = np.array([11, -2]) 
   #A[-1,-2:] = np.array([-2, 11]) 
   A[0,:2] = np.array([1, -2.63636364]) 
   A[-1,-2:] = np.array([-2.63636364, 1]) 
+  
+  print(A)
 
   # B matrix
   B = np.zeros((n, n))
-  np.fill_diagonal(B[1:], 12)
+  np.fill_diagonal(B[1:], 12)#6/5)
   B += B.T
-  np.fill_diagonal(B, -24)
+  np.fill_diagonal(B, -24)#-12/5)
   
   #B[0,:2] = np.array([-6, 6])
   #B[-1,-2:] = np.array([6, -6])
-  B[0,:4] = np.array([-3., 5.45454545, -2.45454545, 0*-0.54545455*h])
-  B[-1,-4:] = np.array([-3., 5.45454545, -2.45454545, 0*0.54545455*h])
+  B[0,:4] = np.array([-3., 5.45454545, -2.45454545, 0])
+  B[-1,-4:] = np.array([0, -2.45454545, 5.45454545, -3])
+  print(B)
    
   B /= h ** 2 
+  print(B)
   
   #print(A); print(B)
 
@@ -89,16 +93,25 @@ def createMatrices(n, h):
   
   
 def experiment(n):
-  h = 1/(n)
+  h = 1/(n+1)
   i = np.arange(1, n+1)
   
-  x = (i - .5) * h
+  x = h * (i+1)
+  #x = (i - .5) * h
   
   A, B = createMatrices(n, h)
   F = f(x)
   I = np.eye(n)
   
+#  As = np.asmatrix(A)
+#  Bs = np.asmatrix(B)
+#  
+#  OP_2 = As.I*Bs
+#  OP_2_array=np.squeeze(np.asarray(OP_2))
+  
   y = np.linalg.solve(np.dot(np.linalg.inv(A), B) + I, F)
+  #y = np.linalg.solve(OP_2_array + I, F)
+  #y = np.linalg.solve(np.dot(np.asmatrix(A).I, B) + I, F)
   print(x)
   
   return x, y
