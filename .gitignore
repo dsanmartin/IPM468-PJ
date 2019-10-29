@@ -105,5 +105,5 @@ venv.bak/
 
 
 # Others
-1/prototype/data/
-1/src/
+#1/prototype/data/
+1/src/data

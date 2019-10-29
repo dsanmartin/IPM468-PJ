@@ -6,16 +6,12 @@ from mpl_toolkits.mplot3d import Axes3D
 p = lambda x, y: np.cos(x + y) * np.sin(x - y)
 f = lambda x, y: -4 * p(x, y)
 
-def plot2D(x, y, u):
-  plt.contourf(x, y, u)
-  plt.colorbar()
-  plt.show()
-
-def ConjugateGradient(A, b, x, conv=1e-6, max_it=2500):
+# Conjugate gradient implementation
+def ConjugateGradient(A, b, x, conv=1e-6):
   r = b - np.dot(A, x)
   p = r
   i = 0
-  while np.linalg.norm(r) > conv and i <= max_it:
+  while np.linalg.norm(r) > conv:# and i <= max_it:
     a = np.dot(p.T, r) / (np.dot(p.T, np.dot(A, r)))
     x = x + a * p  
     r = r - a * np.dot(A, p)
@@ -25,6 +21,7 @@ def ConjugateGradient(A, b, x, conv=1e-6, max_it=2500):
     
   return x
 
+# Create A and b 
 def createSystem(Nx, Ny, h, F, P):
   # Create A matrix
   A = np.zeros(((Nx-1)*(Ny-1), (Nx-1)*(Ny-1)))
@@ -57,9 +54,11 @@ def createSystem(Nx, Ny, h, F, P):
 
   return A, b
 
+# Experiment
 def experiment(h):
   Nx, Ny = int(1/h), int(1/h)
   
+  # Grid definition
   x = np.linspace(0, 1, Nx + 1)
   y = np.linspace(0, 1, Ny + 1)
   
@@ -82,13 +81,18 @@ def experiment(h):
   U[1:-1,1:-1] = u.reshape((Nx-1), (Ny-1)) # Approximation of interior points
   
   return X, Y, U, P
+
+# 2D plot
+def plot2D(x, y, u):
+  plt.contourf(x, y, u)
+  plt.colorbar()
+  plt.show()
   
 #%% Experiments
-
 X1, Y1, U1, P1 = experiment(0.1)  
 X2, Y2, U2, P2 = experiment(0.05)  
 X3, Y3, U3, P3 = experiment(0.025)  
-#%%
+#%% Plots
 plot2D(X1, Y1, U1)
 plot2D(X1, Y1, P1)
 plot2D(X1, Y1, np.abs(U1-P1))
@@ -103,13 +107,14 @@ plot2D(X3, Y3, U3)
 plot2D(X3, Y3, P3)
 plot2D(X3, Y3, np.abs(U3-P3))
 
-#%%
+#%% Error
 e1 = np.linalg.norm((U1-P1).flatten(), np.inf)
 e2 = np.linalg.norm((U2-P2).flatten(), np.inf)
 e3 = np.linalg.norm((U3-P3).flatten(), np.inf)
 
 print(e1, e2, e3)
-#%%
+
+#%% Structures to save
 M1, N1 = U1.shape
 M2, N2 = U2.shape
 M3, N3 = U3.shape
@@ -122,11 +127,11 @@ E2f = np.zeros((M2 * N2, 3)); E2f[:,0] = X2.flatten(); E2f[:,1] = Y2.flatten(); 
 E3f = np.zeros((M3 * N3, 3)); E3f[:,0] = X3.flatten(); E3f[:,1] = Y3.flatten(); E3f[:,2] = np.abs(U3-P3).flatten()
 
 #%% Save data
-DIR = 'data/5/'
-np.savetxt(DIR + 'U1.csv', U1f, fmt='%.8f', delimiter=' ')#, header='x,y,u', comments="")
-np.savetxt(DIR + 'U2.csv', U2f, fmt='%.8f', delimiter=' ')#, header='x,y,u', comments="")
-np.savetxt(DIR + 'U3.csv', U3f, fmt='%.8f', delimiter=' ')#, header='x,y,u', comments="")
-np.savetxt(DIR + 'E1.csv', E1f, fmt='%.8f', delimiter=' ')#, header='x,y,u', comments="")
-np.savetxt(DIR + 'E2.csv', E2f, fmt='%.8f', delimiter=' ')#, header='x,y,u', comments="")
-np.savetxt(DIR + 'E3.csv', E3f, fmt='%.8f', delimiter=' ')#, header='x,y,u', comments="")
+DIR = 'data/5/b/'
+np.savetxt(DIR + 'U1.csv', U1f, fmt='%.8f', delimiter=' ')
+np.savetxt(DIR + 'U2.csv', U2f, fmt='%.8f', delimiter=' ')
+np.savetxt(DIR + 'U3.csv', U3f, fmt='%.8f', delimiter=' ')
+np.savetxt(DIR + 'E1.csv', E1f, fmt='%.8f', delimiter=' ')
+np.savetxt(DIR + 'E2.csv', E2f, fmt='%.8f', delimiter=' ')
+np.savetxt(DIR + 'E3.csv', E3f, fmt='%.8f', delimiter=' ')
 

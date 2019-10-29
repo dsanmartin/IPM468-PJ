@@ -1,10 +1,10 @@
 """
-  Question 3 prototype
+  Question 3
 """
 import numpy as np
 import matplotlib.pyplot as plt
 #%%
-# 
+# N = 2
 def F2(t, u):
   return np.array([
     -(u[1] - u[3]) / r(u[:2], u[2:]) ** 2,
@@ -13,6 +13,7 @@ def F2(t, u):
     (u[2] - u[0]) / r(u[2:], u[:2]) ** 2,
   ]) / (2 * np.pi)
 
+# N = 4
 def F(t, u):
   return np.array([
     -(u[1] - u[3]) / r(u[0:2], u[2:4]) ** 2 - (u[1] - u[5]) / r(u[0:2], u[4:6]) ** 2 - (u[1] - u[7]) / r(u[0:2], u[6:]) ** 2, 
@@ -25,7 +26,7 @@ def F(t, u):
     (u[6] - u[0]) / r(u[6: ], u[0:2]) ** 2 + (u[6] - u[2]) / r(u[6: ], u[2:4]) ** 2 + (u[6] - u[4]) / r(u[6: ], u[4:6]) ** 2,
   ]) / (2 * np.pi)
   
-  
+# Runge-Kutta method
 def RK4(t, u0, fun):
   L = len(t)
   U = np.zeros((L, len(u0)))
@@ -40,10 +41,12 @@ def RK4(t, u0, fun):
 
   return U  
 
+# Distance function
 def r(p1, p2):
   (x1, y1), (x2, y2) = p1, p2
   return ((x2 - x1) ** 2 + (y2 - y1) ** 2) ** 0.5
 
+# Conservation of energy
 def CE(p):
   rij = 1
   N = len(p) // 2
@@ -55,25 +58,30 @@ def CE(p):
         rij *= np.sqrt(r(p1, p2))
   return rij
 
-def R(U):
+# Compute CE for each timestep
+def CEs(U):
   return np.array([CE(U[k]) for k in range(len(U))])
 
-def RR(P1, P2):
+# Compute distances of two points for each timestep
+def Rs(P1, P2):
   return np.array([r(P1[k], P2[k]) for k in range(len(P1))])
 
+# Plot vortices
 def plot(U):
   M, N = U.shape
   for p in range(0, N, 2):
-    plt.scatter(U[:, p], U[:, p + 1])
+    #plt.scatter(U[:, p], U[:, p + 1])
+    plt.plot(U[:, p], U[:, p + 1])
   plt.grid(True)
   plt.show()
   
+# Plor CE 
 def plotR(t, r):
   plt.plot(t, r)
   plt.grid(True)
   plt.show()
 #%% Parameters
-L = 500
+L = 1000
 T_max = 500
 t_1 = np.linspace(0, T_max, L + 1)
 # %% P1
@@ -97,6 +105,7 @@ u0_4 = np.array([2, 1.01, -2, 1, -2, -1, 2, -1])
 U4 = RK4(t_1, u0_4, F)
 #%%
 plot(U4)
+# caotico revisar (inestable)
 
 # %% P5
 L = 500
@@ -116,12 +125,12 @@ U5b = RK4(t_2, u0_5b, F)
 #%%
 plot(U5b)
 #%%
-R1 = R(U1)
-R2 = R(U2)
-R3 = R(U3)
-R4 = R(U4)
-R5a = R(U5a)
-R5b = R(U5b)
+R1 = CEs(U1)
+R2 = CEs(U2)
+R3 = CEs(U3)
+R4 = CEs(U4)
+R5a = CEs(U5a)
+R5b = CEs(U5b)
 #%%
 plotR(t_1, R1)
 plotR(t_1, R2)
@@ -133,11 +142,11 @@ plotR(t_2, R5b)
 origin = np.zeros((len(t_2), 2))
 
 #%%
-R5a_d = RR(origin, U5a[:,2:4])
+R5a_d = Rs(origin, U5a[:,2:4])
 plotR(t_2, R5a_d)
 
 #%%
-R5b_d = RR(origin, U5b[:,2:4])
+R5b_d = Rs(origin, U5b[:,2:4])
 plotR(t_2, R5b_d)
 
 #%%

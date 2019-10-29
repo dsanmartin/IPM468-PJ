@@ -27,6 +27,7 @@ def RK4(t, u0, **kwargs):
 
   return U   
 
+# Euler method for testing...
 def Euler(t, u0, **kwargs):
   L = len(t)
   U = np.zeros((L, len(u0)))
@@ -37,6 +38,7 @@ def Euler(t, u0, **kwargs):
     
   return U    
 
+# Plot x(t)
 def plot(t, x):
   plt.plot(t, x)
   plt.grid(True)
@@ -47,15 +49,15 @@ def plot3D(x, y, z):
   fig = plt.figure(figsize=(12, 12))
   ax = fig.add_subplot(111, projection='3d')
   ax.plot(x, y, z)
-  ax.view_init(elev=90, azim=270)
+  #ax.view_init(elev=90, azim=270)
   ax.set_xlabel('x')
   ax.set_ylabel('y')
   ax.set_zlabel('z')
   plt.show()
 #%% Reproducing Rossler Paper Experiment
-L_r = 5000
-T_max_r = 339.249
-#L = T_max / 0.001
+L_r = 500000 # 340000
+T_max_r = 813.312#339.249
+#L_r = int(T_max_r / 0.001)
 t_r = np.linspace(0, T_max_r, L_r + 1)
 a_r, b_r, c_r = 0.2, 0.2, 5.7
 u0_r = np.array([0, -6.78, 0.02])
@@ -75,7 +77,7 @@ print("Rossler experiment - (x, y, z) at t_end: ", Ur[-1])
 #print(U2[-1], U2[0])
 
 #%% P4
-L_1 = 5000
+L_1 = 5000 # 5000
 T_max_1 = 300
 #L = T_max / 0.001
 t_1 = np.linspace(0, T_max_1, L_1 + 1)
@@ -134,7 +136,7 @@ plot(t_2, U7a[:,0])
 plot(t_2, U7b[:,0])
 plot(t_2, U7a[:,0] - U7b[:,0])
 
-#%%
+#%% Data structure to save
 X1 = np.zeros((len(U7a), 2)); X1[:,0] = t_2; X1[:,1] = U7a[:,0]
 X2 = np.zeros((len(U7b), 2)); X2[:,0] = t_2; X2[:,1] = U7b[:,0]
 X1X2 = np.zeros((len(U7b), 2)); X1X2[:,0] = t_2; X1X2[:,1] = U7a[:,0] - U7b[:,0]
