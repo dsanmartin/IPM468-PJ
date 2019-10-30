@@ -1,6 +1,10 @@
+"""
+  Question 5: Poisson 3D
+"""
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+import pathlib
 #%% Functions...
 
 # Analityc solution
@@ -49,8 +53,8 @@ def experiment(f, r, Nx, Ny, Nz, N_iter, solver, w=None):
   y = np.linspace(0, 1, Ny + 1)
   z = np.linspace(0, 1, Nz + 1)
   
-  X, Y = np.meshgrid(x, y)
-  X3, Y3, Z3 = np.meshgrid(x, y, z)
+  X, Y = np.meshgrid(x, y) # For 2D
+  X3, Y3, Z3 = np.meshgrid(x, y, z) # For 3D
   
   # Parameters
   h = x[1] - x[0] # h = dx = dy = dz
@@ -87,6 +91,7 @@ Xc, Yc, X3c, Y3c, Z3c, Uc = experiment(f, r, 20, 20, 20, 500, Jacobi)
 
 #%%
 # Plot u(x,y,0.8)
+print("Jacobi coarse mesh")
 Pc = p(Xc, Yc, np.ones_like(Xc) * 0.8, r)
 plot3D(Xc, Yc, Pc)        
 plot3D(Xc, Yc, Uc[:,:,16])    
@@ -101,6 +106,7 @@ Xf, Yf, X3f, Y3f, Z3f, Uf = experiment(f, r, 50, 50, 50, 3000, Jacobi)
 
 #%%
 # Plots      
+print("Jacobi fine mesh")
 Pf = p(Xf, Yf, np.ones_like(Xf) * 0.8, r)
 plot3D(Xf, Yf, Pf)        
 plot3D(Xf, Yf, Uf[:,:,40])    
@@ -114,7 +120,8 @@ print("L_inf norm: ", np.linalg.norm((p(X3f, Y3f, Z3f, r) - Uf).flatten(), np.in
 Xc_r, Yc_r, X3c_r, Y3c_r, Z3c_r, Uc_r = experiment(f, r, 20, 20, 20, 200, SOR, w=1.9)
 
 #%%
-# Plots      
+# Plots  
+print("Relaxation coarse mesh")    
 Pc_r = p(Xc_r, Yc_r, np.ones_like(Xc_r) * 0.8, r)
 plot3D(Xc_r, Yc_r, Pc_r)        
 plot3D(Xc_r, Yc_r, Uc_r[:,:,16]) 
@@ -129,6 +136,7 @@ Xf_r, Yf_r, X3f_r, Y3f_r, Z3f_r, Uf_r = experiment(f, r, 50, 50, 50, 500, SOR, w
 
 #%%
 # Plots      
+print("Relaxaction fine mesh")
 Pf_r = p(Xf_r, Yf_r, np.ones_like(Xf_r) * 0.8, r)
 plot3D(Xf_r, Yf_r, Pf_r)        
 plot3D(Xf_r, Yf_r, Uf_r[:,:,40])    
@@ -151,6 +159,8 @@ Ef_r = np.zeros((51 * 51, 3)); Ef_r[:,0] = Xf.flatten(); Ef_r[:,1] = Yf.flatten(
 
 #%% Save data
 DIR = 'data/5/a/'
+pathlib.Path(DIR).mkdir(parents=True, exist_ok=True) # Create Folder
+# Write files
 np.savetxt(DIR + 'Uc_j.csv', Uc_j, fmt='%.8f', delimiter=' ')
 np.savetxt(DIR + 'Uf_j.csv', Uf_j, fmt='%.8f', delimiter=' ')
 np.savetxt(DIR + 'Uc_r.csv', Uc_rr, fmt='%.8f', delimiter=' ')

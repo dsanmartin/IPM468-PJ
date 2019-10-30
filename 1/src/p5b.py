@@ -1,23 +1,25 @@
+"""
+  Question 5: Poisson 2D with Conjugate Gradient
+"""
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+import pathlib
 #%%
 # Functions to use
-p = lambda x, y: np.cos(x + y) * np.sin(x - y)
-f = lambda x, y: -4 * p(x, y)
+p = lambda x, y: np.cos(x + y) * np.sin(x - y) # Analytic solution
+f = lambda x, y: -4 * p(x, y) # RHS
 
 # Conjugate gradient implementation
 def ConjugateGradient(A, b, x, conv=1e-6):
   r = b - np.dot(A, x)
   p = r
-  i = 0
-  while np.linalg.norm(r) > conv:# and i <= max_it:
+  while np.linalg.norm(r) > conv: # Convergence criteria
     a = np.dot(p.T, r) / (np.dot(p.T, np.dot(A, r)))
     x = x + a * p  
     r = r - a * np.dot(A, p)
     b = - np.dot(p.T, np.dot(A, r)) / np.dot(np.dot(A, p).T, p)
     p = r + b * p
-    i += 1
     
   return x
 
@@ -74,7 +76,6 @@ def experiment(h):
   
   # Solve
   u = ConjugateGradient(A, b, x0)
-  #u = np.linalg.solve(A, b)
   
   # Numerical solution
   U = np.copy(P) # Boundary
@@ -93,16 +94,19 @@ X1, Y1, U1, P1 = experiment(0.1)
 X2, Y2, U2, P2 = experiment(0.05)  
 X3, Y3, U3, P3 = experiment(0.025)  
 #%% Plots
+print("h=0.1")
 plot2D(X1, Y1, U1)
 plot2D(X1, Y1, P1)
-plot2D(X1, Y1, np.abs(U1-P1))
+plot2D(X1, Y1, np.abs(U1-P1)) # "Error"
 
 #%%
+print("h=0.05")
 plot2D(X2, Y2, U2)
 plot2D(X2, Y2, P2)
 plot2D(X2, Y2, np.abs(U2 - P2))
 
 #%%
+print("h=0.025")
 plot2D(X3, Y3, U3)
 plot2D(X3, Y3, P3)
 plot2D(X3, Y3, np.abs(U3-P3))
@@ -112,6 +116,7 @@ e1 = np.linalg.norm((U1-P1).flatten(), np.inf)
 e2 = np.linalg.norm((U2-P2).flatten(), np.inf)
 e3 = np.linalg.norm((U3-P3).flatten(), np.inf)
 
+print("Error for each h")
 print(e1, e2, e3)
 
 #%% Structures to save
@@ -128,6 +133,8 @@ E3f = np.zeros((M3 * N3, 3)); E3f[:,0] = X3.flatten(); E3f[:,1] = Y3.flatten(); 
 
 #%% Save data
 DIR = 'data/5/b/'
+pathlib.Path(DIR).mkdir(parents=True, exist_ok=True) # Create Folder
+# Write files
 np.savetxt(DIR + 'U1.csv', U1f, fmt='%.8f', delimiter=' ')
 np.savetxt(DIR + 'U2.csv', U2f, fmt='%.8f', delimiter=' ')
 np.savetxt(DIR + 'U3.csv', U3f, fmt='%.8f', delimiter=' ')

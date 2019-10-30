@@ -1,11 +1,11 @@
 """
-  Question 2
+  Question 2: Rossler attractor
 """
 # Library import
 import numpy as np # Data structures, vector, matrices, etc
-from scipy.integrate import solve_ivp
 import matplotlib.pyplot as plt # Plots
 from mpl_toolkits.mplot3d import Axes3D
+import pathlib
 #%%  
 # RHS definition
 def F(t, u, **kwargs):
@@ -49,37 +49,25 @@ def plot3D(x, y, z):
   fig = plt.figure(figsize=(12, 12))
   ax = fig.add_subplot(111, projection='3d')
   ax.plot(x, y, z)
-  #ax.view_init(elev=90, azim=270)
   ax.set_xlabel('x')
   ax.set_ylabel('y')
   ax.set_zlabel('z')
   plt.show()
 #%% Reproducing Rossler Paper Experiment
-L_r = 500000 # 340000
-T_max_r = 813.312#339.249
-#L_r = int(T_max_r / 0.001)
+L_r = 5000 # 340000
+T_max_r = 339.249 #813.312#339.249
 t_r = np.linspace(0, T_max_r, L_r + 1)
 a_r, b_r, c_r = 0.2, 0.2, 5.7
 u0_r = np.array([0, -6.78, 0.02])
 Ur = RK4(t_r, u0_r, a=a_r, b=b_r, c=c_r)
-#Ue = Euler(t, u0, a=a_, b=b_, c=c_)
-#Uivp = solve_ivp(fun=lambda t, y: F(t, y, a=a_, b=b_, c=c_), t_span=[t[0], t[-1]], y0=u0, t_eval=t)
-#%%
-#%matplotlib qt
-#U2 = Uivp.y.T
+
+#%% Plot Rossler experiment
 plot3D(Ur[:,0], Ur[:,1], Ur[:,2])
 print("Rossler experiment - (x, y, z) at t_end: ", Ur[-1])
-#plot(Ue[:,0], Ue[:,1], Ue[:,2])
-#plot(U2[:,0], U2[:,1], U2[:,2])
-#%%
 
-#print(Ue[-1], Ue[0])
-#print(U2[-1], U2[0])
-
-#%% P4
-L_1 = 5000 # 5000
+#%% Question 4
+L_1 = 5000 
 T_max_1 = 300
-#L = T_max / 0.001
 t_1 = np.linspace(0, T_max_1, L_1 + 1)
 u0_1 = np.array([4, 0, 0])
 
@@ -115,7 +103,7 @@ plot3D(U4[:,0], U4[:,1], U4[:,2])
 plot3D(U5[:,0], U5[:,1], U5[:,2])
 plot3D(U6[:,0], U6[:,1], U6[:,2])
 
-#%% P5
+#%% Question 5
 L_2 = 5000
 T_max_2 = 300
 t_2 = np.linspace(0, T_max_1, L_1 + 1)
@@ -123,15 +111,15 @@ a_, b_, c_ = 0.2, 0.2, 5.7
 u0_2a = np.array([1, 0, 0])
 u0_2b = np.array([1.01, 0, 0])
 
-#%%
+#%% Solve
 U7a = RK4(t_2, u0_2a, a=a_, b=b_, c=c_)
 U7b = RK4(t_2, u0_2b, a=a_, b=b_, c=c_)
 
-#%%
+#%% Plots
 plot3D(U7a[:,0], U7a[:,1], U7a[:,2])
 plot3D(U7b[:,0], U7b[:,1], U7b[:,2])
 
-#%%
+#%% Plot only x_1(t), x_2(t) and difference
 plot(t_2, U7a[:,0])
 plot(t_2, U7b[:,0])
 plot(t_2, U7a[:,0] - U7b[:,0])
@@ -142,7 +130,9 @@ X2 = np.zeros((len(U7b), 2)); X2[:,0] = t_2; X2[:,1] = U7b[:,0]
 X1X2 = np.zeros((len(U7b), 2)); X1X2[:,0] = t_2; X1X2[:,1] = U7a[:,0] - U7b[:,0]
 
 #%% Save data
-DIR = 'data/2/'
+DIR = 'data/2/' # Directory name
+pathlib.Path(DIR).mkdir(parents=True, exist_ok=True) # Create Folder
+# Write files
 np.savetxt(DIR + 'Ur.csv', Ur, fmt='%.8f', delimiter=',', header='x,y,z', comments="")
 np.savetxt(DIR + 'U1.csv', U1, fmt='%.8f', delimiter=',', header='x,y,z', comments="")
 np.savetxt(DIR + 'U2.csv', U2, fmt='%.8f', delimiter=',', header='x,y,z', comments="")

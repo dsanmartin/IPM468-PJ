@@ -1,8 +1,9 @@
 """
-  Question 3
+  Question 3: Vortices dynamics
 """
 import numpy as np
 import matplotlib.pyplot as plt
+import pathlib
 #%%
 # N = 2
 def F2(t, u):
@@ -46,7 +47,7 @@ def r(p1, p2):
   (x1, y1), (x2, y2) = p1, p2
   return ((x2 - x1) ** 2 + (y2 - y1) ** 2) ** 0.5
 
-# Conservation of energy
+# Conservation of energy computation
 def CE(p):
   rij = 1
   N = len(p) // 2
@@ -80,37 +81,41 @@ def plotR(t, r):
   plt.plot(t, r)
   plt.grid(True)
   plt.show()
+  
 #%% Parameters
 L = 1000
 T_max = 500
 t_1 = np.linspace(0, T_max, L + 1)
-# %% P1
+
+# %% Question 1
 u0_1 = np.array([1, 1, -1, 1, -1, -1, 1, -1])
 U1 = RK4(t_1, u0_1, F)
 #%%
 plot(U1)
-# %% P2
+
+# %% Question 2
 u0_2 = np.array([1, 1.01, -1, 1, -1, -1, 1, -1])
 U2 = RK4(t_1, u0_2, F)
 #%%
 plot(U2)
-# %% P3
+
+# %% Question 3
 u0_3 = np.array([2, 1, -2, 1, -2, -1, 2, -1])
 U3 = RK4(t_1, u0_3, F)
 #%%
 plot(U3)
 
-# %% P4
+#%% Question 4
 u0_4 = np.array([2, 1.01, -2, 1, -2, -1, 2, -1])
 U4 = RK4(t_1, u0_4, F)
 #%%
 plot(U4)
-# caotico revisar (inestable)
 
-# %% P5
+#%% Question 5
 L = 500
 T_max = 200
 t_2 = np.linspace(0, T_max, L + 1)
+
 #%% a
 eps = 0
 u0_5a = np.array([-1, 0, eps, 0, 1, 0, 2, 0])
@@ -124,32 +129,34 @@ u0_5b = np.array([-1, 0, eps, 0, 1, 0, 2, 0])
 U5b = RK4(t_2, u0_5b, F)
 #%%
 plot(U5b)
-#%%
+#%% Conservation of energy
 R1 = CEs(U1)
 R2 = CEs(U2)
 R3 = CEs(U3)
 R4 = CEs(U4)
 R5a = CEs(U5a)
 R5b = CEs(U5b)
-#%%
+
+#%% Plot CE
 plotR(t_1, R1)
 plotR(t_1, R2)
 plotR(t_1, R3)
 plotR(t_1, R4)
 plotR(t_2, R5a)
 plotR(t_2, R5b)
-#%%
+
+#%% Origin points
 origin = np.zeros((len(t_2), 2))
 
-#%%
+#%% Distances eps=0
 R5a_d = Rs(origin, U5a[:,2:4])
 plotR(t_2, R5a_d)
 
-#%%
+#%% Distances eps=1e-4
 R5b_d = Rs(origin, U5b[:,2:4])
 plotR(t_2, R5b_d)
 
-#%%
+#%% Structures to save
 RT1 = np.zeros((len(R1), 2)); RT1[:,0] = t_1; RT1[:,1] = R1
 RT2 = np.zeros((len(R2), 2)); RT2[:,0] = t_1; RT2[:,1] = R2
 RT3 = np.zeros((len(R3), 2)); RT3[:,0] = t_1; RT3[:,1] = R3
@@ -160,7 +167,9 @@ RT5Da = np.zeros((len(R5a_d), 2)); RT5Da[:,0] = t_2; RT5Da[:,1] = R5a_d
 RT5Db = np.zeros((len(R5b_d), 2)); RT5Db[:,0] = t_2; RT5Db[:,1] = R5b_d
 
 #%% SAVE
-DIR = 'data/3/'
+DIR = 'data/3/' # Directory name
+pathlib.Path(DIR).mkdir(parents=True, exist_ok=True) # Create Folder
+# Write files
 np.savetxt(DIR + 'U1.csv', U1, fmt='%.8f', delimiter=',', header='x1,y1,x2,y2,x3,y3,x4,y4', comments="")
 np.savetxt(DIR + 'U2.csv', U2, fmt='%.8f', delimiter=',', header='x1,y1,x2,y2,x3,y3,x4,y4', comments="")
 np.savetxt(DIR + 'U3.csv', U3, fmt='%.8f', delimiter=',', header='x1,y1,x2,y2,x3,y3,x4,y4', comments="")
