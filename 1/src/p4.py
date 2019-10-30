@@ -126,13 +126,13 @@ data[:,2] = y_a
 
 #%%
 error = np.zeros((len(ns), 2))
-error[:,0] = ns
+error[:,0] = 1/ns
 error[:,1] = err
 
 #%%
 DIR = 'data/4/'
 pathlib.Path(DIR).mkdir(parents=True, exist_ok=True) # Create Folder
 # Write files
-np.savetxt(DIR + 'data.csv', data, fmt='%.8f', delimiter=',', header='x,y,y_a', comments="")
-np.savetxt(DIR + 'error.csv', error, fmt='%.8f', delimiter=',', header='n,e', comments="")
+np.savetxt(DIR + 'data.csv', data, fmt='%.16f', delimiter=',', header='x,y,y_a', comments="")
+np.savetxt(DIR + 'error.csv', error, fmt='%.16f', delimiter=',', header='n,e', comments="")
 
