@@ -18,6 +18,8 @@ class Experiment:
     self.u0 = kwargs['u0']
     self.v0 = kwargs['v0']
     
+    #self.K = kwargs['K']
+    
     self.dx = self.L / self.N
     self.dy = self.dx
     
@@ -29,12 +31,13 @@ class Experiment:
     self.dt = self.dx / 100
     self.t = np.arange(0, self.T_max, self.dt)
     
+    
+    #self.dt = self.T_max / self.K
+    #self.t = np.linspace(0, self.T_max, self.K)
+    
+    
     print(len(self.t))
-    
-    
-#    print("x: ", self.x, "dx: ", self.dx)
-#    print("y: ", self.y, "dy: ", self.dy)
-#    print("t: ", self.t, "dt: ", self.dt)
+
 
   def F(self, t, y):
     h = np.copy(y[:self.N ** 2].reshape((self.N, self.N)))
@@ -45,18 +48,6 @@ class Experiment:
     hy = np.copy(h)
     ux = np.copy(u)
     vy = np.copy(v)
-    
-#    hx[1:-1, 1:-1] = (h[2:,1:-1] - 2 * h[1:-1,1:-1] + h[:-2,1:-1]) / self.dx / self.dx
-#    hy[1:-1, 1:-1] = (h[1:-1,2:] - 2 * h[1:-1,1:-1] + h[1:-1,:-2]) / self.dy / self.dy
-#    
-#    ux[1:-1, 1:-1] = (u[2:,1:-1] - 2 * u[1:-1,1:-1] + u[:-2,1:-1]) / self.dx / self.dx
-#    vy[1:-1, 1:-1] = (v[1:-1,2:] - 2 * v[1:-1,1:-1] + v[1:-1,:-2]) / self.dy / self.dy
-    
-#    hx[1:-1, 1:-1] = (h[1:-1,2:] - 2 * h[1:-1,1:-1] + h[1:-1,:-2]) / self.dx / self.dx
-#    hy[1:-1, 1:-1] = (h[2:,1:-1] - 2 * h[1:-1,1:-1] + h[:-2,1:-1]) / self.dy / self.dy
-#    
-#    vy[1:-1, 1:-1] = (v[2:,1:-1] - 2 * v[1:-1,1:-1] + v[:-2,1:-1]) / self.dy / self.dy
-#    ux[1:-1, 1:-1] = (u[1:-1,2:] - 2 * u[1:-1,1:-1] + u[1:-1,:-2]) / self.dx / self.dx
     
     hx[1:-1, 1:-1] = (h[1:-1,2:] - h[1:-1,:-2]) / (2 * self.dx)
     hy[1:-1, 1:-1] = (h[2:,1:-1] - h[:-2,1:-1]) / (2 * self.dy)
@@ -70,8 +61,8 @@ class Experiment:
     vf = -self.f * u - self.g * hy - self.b * v
     
     # Boundary
-    aa = 1
-    bb = 1
+    aa = 0
+    bb = 0
     
     # U
     uf[:,0] = uf[:,1] - aa * self.dx
@@ -143,29 +134,40 @@ class Experiment:
   
   
 #%%
-#def h0(x, y):
-#  return np.ones_like(x) #x * 0 + 1.0
-h0 = lambda x, y: x * 0 + 1 
+# Initial conditions
+h0 = lambda x, y, R, hp: 1 + hp * (np.sqrt((x - .5)**2 + (y - .5)**2) <= R) # Initial 
 u0 = lambda x, y: x * 0
 v0 = lambda x, y: x * 0
+h0g = lambda x, y: 1 + 0.11 * np.exp(-100*((x-.5)**2 + (y-.5)**2))
+#%% 
+# x = np.linspace(0, 1, 100)
+# y = np.copy(x)
+# X, Y = np.meshgrid(x, y)
+# H0 = h0(X, Y, 0.1, 0.1)
+# HG = h0g(X, Y)
+# #%%
 
-def h0_2(x, y, R, hp):
-  center = (int(len(x)/2), int(len(y)/2))
-  Y, X = np.ogrid[:len(y), :len(x)]
-  dist_from_center = np.sqrt((X - center[0]) **2 + (Y-center[1]) **2)
-  mask = dist_from_center <= R
-  return h0(x,y) + hp * mask
-  
+# plt.imshow(H0, extent=[0, 1, 0, 1])
+# plt.colorbar()
+# plt.plot()
+# #%%
+# plt.imshow(HG, extent=[0, 1, 0, 1])
+# plt.colorbar()
+# plt.plot()
 
-H_ = .05
+#%%
+
+H_ = 10
 f_ = 0
 g_ = 1
 b_ = 2
 
-T_max_ = .15
+T_max_ = .5
 
 L_ = 1
 N_ = 100
+
+#K_ = 500
 
 exp_1 = Experiment(
   H = H_,
@@ -175,17 +177,22 @@ exp_1 = Experiment(
   L = L_,
   N = N_,
   T_max = T_max_,
-  h0 = lambda x, y: h0_2(x, y, .1, .1),
+  h0 = lambda x, y: h0(x, y, .1, .1),
+  #h0 = h0g,
   u0 = u0,
-  v0 = v0
+  v0 = v0,
+  #K = K_
 )
+
 #%%
 t, X, Y, H, U, V = exp_1.solvePDE()
 #%%
 for k in range(len(t)):
   if k % 100 == 0:
     print(k)
-    plt.contourf(X, Y, H[k], vmin=np.min(H), vmax=np.max(H))#H[-1])
+    #plt.contourf(X, Y, H[k], vmin=np.min(H), vmax=np.max(H))#H[-1])
+    plt.imshow(H[k], #vmin=np.min(H), vmax=np.max(H), 
+               origin="lower", extent=[0, 1, 0, 1])
     #plt.quiver(X, Y, U[10], V[0])
     plt.colorbar()
     plt.show()
@@ -195,10 +202,12 @@ from mpl_toolkits import mplot3d
 
 fig = plt.figure()
 
-k = 2000
+k = -1
 ax = plt.gca(projection='3d')
-print(k)
-sf = ax.plot_surface(X, Y, H[-1])#, vmin=np.min(H), vmax=np.max(H))#H[-1])
+sf = ax.plot_surface(X, Y, H[k])#, vmin=np.min(H), vmax=np.max(H))#H[-1])
 #plt.quiver(X, Y, U[10], V[0])
-fig.colorbar(sf)
 plt.show()
+
+
+
+
