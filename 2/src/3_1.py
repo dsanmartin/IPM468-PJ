@@ -8,7 +8,8 @@ g = 1
 c0 = np.sqrt(g * h0)
 
 xA = lambda t: -c0 * t
-xB = lambda t: c0 * t
+xB = lambda t: 2 * c0 * t
+  
 
 def h_(x, t):
   # Data to return
@@ -53,8 +54,12 @@ def u_(x, t):
 #  return o
   
 #%%
-x = np.linspace(-5, 5, 500)
-t = np.linspace(0, 5, 10)
+x_i, x_f = -10, 10
+t_i, t_f = 0, 5
+Nx = 500
+Nt = 100
+x = np.linspace(x_i, x_f, Nx)
+t = np.linspace(t_i, t_f, Nt)
 X, T = np.meshgrid(x, t)
 
 #%% Initial condition
