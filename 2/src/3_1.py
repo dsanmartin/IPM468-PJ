@@ -2,13 +2,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 #%%
 
-h0 = 5
+h0 = 40
 g = 1
-
+x0 = 1000
 c0 = np.sqrt(g * h0)
 
-xA = lambda t: -c0 * t
-xB = lambda t: 2 * c0 * t
+xA = lambda t: -c0 * t + x0
+xB = lambda t: 2 * c0 * t + x0
   
 
 def h_(x, t):
@@ -54,8 +54,8 @@ def u_(x, t):
 #  return o
   
 #%%
-x_i, x_f = -10, 10
-t_i, t_f = 0, 5
+x_i, x_f = 0, 2000
+t_i, t_f = 0, 40
 Nx = 500
 Nt = 100
 x = np.linspace(x_i, x_f, Nx)
@@ -75,13 +75,15 @@ plt.show()
 
 
 #%% Evolution
+H = h_(X, T)
+U = u_(X, T)
 plt.figure(figsize=(8, 3))
 plt.subplot(1, 2, 1)
-plt.contourf(x, t, h_(X, T))
+plt.contourf(x, t, H)
 plt.grid(True)
 plt.colorbar()
 plt.subplot(1, 2, 2)
-plt.contourf(x, t, u_(X, T))
+plt.contourf(x, t, U)
 plt.grid(True)
 plt.colorbar()
 plt.show()

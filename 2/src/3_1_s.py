@@ -4,8 +4,9 @@ import matplotlib.pyplot as plt
 class Experiment:
   
   def __init__(self, **kwargs):
-    self.g = kwargs['g']
-    self.h = kwargs['h']
+    self.f = kwargs['f']    
+    self.g = kwargs['g']    
+    self.Sf = kwargs['Sf']
     
     
     self.Nx = kwargs['Nx']
@@ -29,42 +30,49 @@ class Experiment:
     h = np.copy(y[:self.Nx])
     Q = np.copy(y[self.Nx:])
     
-    hn = np.copy(h)
+    #hn = np.copy(h)
     Qn = np.copy(Q)
     
-    hn[1:-1] = (h[2:] - h[:-2]) / (2 * self.dx)
-    Qn[1:-1] = (Q[2:] - h[:-2]) / (2 * self.dx)
-
+    # dQ/dx
+    Qn[1:-1] = (Q[2:] - Q[:-2]) / (2 * self.dx)
+    
+    # Inertia
+    In = Q ** 2 / h + self.g * h ** 2 / 2 
+    #print(In)
+    
+    In[1:-1] = (In[2:] - In[:-2]) / (2 * self.dx)
     
     hf = - Qn
-    Qf = self.f * v - self.g * hx - self.b * u
+    Qf = - (In + self.g * h * Sf(self.f, self.g, h, Q) )
     
     # Boundary
-    aa = 0
-    bb = 0
+    hf[0] = hf[1]
+    hf[-1] = hf[-2]
+    Qf[0] = Qf[1]
+    Qf[-1] = Qf[-2]
+    # aa = 0
+    # bb = 0
     
-    # U
-    uf[:,0] = uf[:,1] - aa * self.dx
-    uf[:,-1] = uf[:,-2] + aa * self.dx
-    uf[0,:] = uf[1,:] - bb * self.dy
-    uf[-1,:] = uf[-2,:] + bb * self.dy
+    # # U
+    # uf[:,0] = uf[:,1] - aa * self.dx
+    # uf[:,-1] = uf[:,-2] + aa * self.dx
+    # uf[0,:] = uf[1,:] - bb * self.dy
+    # uf[-1,:] = uf[-2,:] + bb * self.dy
     
-    # V
-    vf[:,0] = vf[:,1] - aa * self.dx
-    vf[:,-1] = vf[:,-2] + aa * self.dx
-    vf[0,:] = vf[1,:] - bb * self.dy
-    vf[-1,:] = vf[-2,:] + bb * self.dy
+    # # V
+    # vf[:,0] = vf[:,1] - aa * self.dx
+    # vf[:,-1] = vf[:,-2] + aa * self.dx
+    # vf[0,:] = vf[1,:] - bb * self.dy
+    # vf[-1,:] = vf[-2,:] + bb * self.dy
 
-    return np.r_[hf.flatten(), uf.flatten(), vf.flatten()]
+    return np.r_[hf.flatten(), Qf.flatten()]
     
   
   def RK4(self, F, y0):
-    L = len(self.t)
-    U = np.zeros((L, len(y0)))
+    U = np.zeros((self.Nt, len(y0)))
     U[0] = y0
-    #dt = self.t[1] - self.t[0]
     dt = self.dt
-    for k in range(L-1):
+    for k in range(self.Nt - 1):
       k1 = F(self.t[k], U[k])
       k2 = F(self.t[k] + 0.5 * dt, U[k] + 0.5 * dt * k1)
       k3 = F(self.t[k] + 0.5 * dt, U[k] + 0.5 * dt * k2)
@@ -75,44 +83,55 @@ class Experiment:
   
   
   def solvePDE(self):
-    X, Y = np.meshgrid(self.x, self.y)
     
-    H0 = self.h0(X, Y)
-    U0 = self.u0(X, Y)
-    V0 = self.v0(X, Y)
-    
-    y0 = np.zeros(3 * self.N ** 2)
-    y0[:self.N ** 2] = H0.flatten()
-    y0[self.N ** 2: 2 * self.N ** 2] = U0.flatten()
-    y0[2 * self.N ** 2:] = V0.flatten()
+    y0 = np.zeros(2 * self.Nx)
+    y0[:self.Nx] = self.h0(self.x)
+    y0[self.Nx:] = self.u0(self.x) * self.h0(self.x)
     
     y = self.RK4(self.F, y0)
     
-    H = y[:, :self.N ** 2].reshape(len(self.t), self.N, self.N)
-    U = y[:, self.N ** 2: 2 * self.N ** 2].reshape(len(self.t), self.N, self.N)
-    V = y[:, 2 * self.N ** 2:].reshape(len(self.t), self.N, self.N)
+    H = y[:, :self.Nx]#.reshape(len(self.t), self.N, self.N)
+    Q = y[:, self.Nx:]#.reshape(len(self.t), self.N, self.N)
     
-    return self.t, X, Y, H, U, V
+    return self.t, self.x, H, Q
   
-
+#%%
 x0 = 1000
 L = 2000
-Nx = 100
+T = 30
+Nx = 50
+Nt = 20000
+f = 0
+g = 1
 
-h0 = lambda x: np.piecewise(x, [x < x0, x >= x0], [40, 0]) 
-
-def h0_(x):
-  o = np.zeros_like(x)
-  idx = np.array((x < x0))
-  o[idx] = 40
-  return o
-
-x = np.linspace(0, L, Nx)
-
-
-
+h0 = lambda x: np.piecewise(x, [x < x0, x >= x0], [40, 1]) 
+u0 = lambda x: x * 0
+Sf = lambda f, g, h, Q: 0 * Q #f * np.abs(Q) * Q / (8 * g * h ** 3)
 
 #%%
+exp_1 = Experiment(
+  f = f,
+  g = g,
+  L = L,
+  T = T,
+  Nx = Nx,
+  Nt = Nt,
+  h0 = h0,
+  u0 = u0,
+  Sf = Sf
+)
+
+#%%
+t, x, H, Q = exp_1.solvePDE()
+#%%
 plt.plot(x, h0(x))
-plt.plot(x, h0_(x))
+plt.show()
+#%%
+#plt.contourf(x[1:-1], t[:200], H[:200,1:-1])
+plt.contourf(x, t, H)
+plt.colorbar()
+plt.show()
+#%%
+plt.contourf(x, t, Q/H)
+plt.colorbar()
 plt.show()
