@@ -33,6 +33,9 @@ class Experiment:
     self.dy = self.y[1] - self.y[0]
     self.dt = self.t[1] - self.t[0]
     
+    
+    self.bc = kwargs['bc']
+    
 
 
   def F(self, t, y):
@@ -57,26 +60,45 @@ class Experiment:
     vf = -self.f * u - self.g * hy - self.b * v
     
     # Boundary
-    aa = 0
-    bb = 0
-    
-    # U
-    uf[:,0] = uf[:,1] - aa * self.dx
-    uf[:,-1] = uf[:,-2] + aa * self.dx
-    uf[0,:] = uf[1,:] - bb * self.dy
-    uf[-1,:] = uf[-2,:] + bb * self.dy
-    
-    # V
-    vf[:,0] = vf[:,1] - aa * self.dx
-    vf[:,-1] = vf[:,-2] + aa * self.dx
-    vf[0,:] = vf[1,:] - bb * self.dy
-    vf[-1,:] = vf[-2,:] + bb * self.dy
-    
-    # H
-    hf[:,0] = hf[:,1] - aa * self.dx
-    hf[:,-1] = hf[:,-2] + aa * self.dx
-    hf[0,:] = hf[1,:] - bb * self.dy
-    hf[-1,:] = hf[-2,:] + bb * self.dy
+    if self.bc == 1:
+      aa = 0
+      bb = 0
+      
+      # U
+      uf[:,0] = uf[:,1] - aa * self.dx
+      uf[:,-1] = uf[:,-2] + aa * self.dx
+      uf[0,:] = uf[1,:] - bb * self.dy
+      uf[-1,:] = uf[-2,:] + bb * self.dy
+      
+      # V
+      vf[:,0] = vf[:,1] - aa * self.dx
+      vf[:,-1] = vf[:,-2] + aa * self.dx
+      vf[0,:] = vf[1,:] - bb * self.dy
+      vf[-1,:] = vf[-2,:] + bb * self.dy
+      
+      # H
+      hf[:,0] = hf[:,1] - aa * self.dx
+      hf[:,-1] = hf[:,-2] + aa * self.dx
+      hf[0,:] = hf[1,:] - bb * self.dy
+      hf[-1,:] = hf[-2,:] + bb * self.dy
+      
+    elif self.bc == 2:
+      uf[:,0] = (4 * uf[:,1] - uf[:,2]) / 3
+      uf[:,-1] = (4 * uf[:,-2] - uf[:,-3]) / 3 
+      uf[0,:] = (4 * uf[1,:] - uf[2,:]) / 3
+      uf[-1,:] = (4 * uf[-2,:] - uf[-3,:]) / 3 
+      
+      vf[:,0] = (4 * vf[:,1] - vf[:,2]) / 3
+      vf[:,-1] = (4 * vf[:,-2] - vf[:,-3]) / 3 
+      vf[0,:] = (4 * vf[1,:] - vf[2,:]) / 3
+      vf[-1,:] = (4 * vf[-2,:] - vf[-3,:]) / 3 
+      
+      hf[:,0] = (4 * hf[:,1] - hf[:,2]) / 3
+      hf[:,-1] = (4 * hf[:,-2] - hf[:,-3]) / 3 
+      hf[0,:] = (4 * hf[1,:] - hf[2,:]) / 3
+      hf[-1,:] = (4 * hf[-2,:] - hf[-3,:]) / 3 
+      
+      
     
     return np.r_[hf.flatten(), uf.flatten(), vf.flatten()]
     
@@ -170,6 +192,8 @@ Nt = 500
 Nx = 100
 Ny = Nx
 
+bc = 1
+
 # Create experiment
 exp_1 = Experiment(
   H = H_,
@@ -182,6 +206,7 @@ exp_1 = Experiment(
   xf = xf,
   yf = yf,
   tf = tf,
+  bc = 1,
   h0 = lambda x, y: h0(x, y, .1, .1),
   #h0 = h0g,
   u0 = u0,
@@ -189,7 +214,7 @@ exp_1 = Experiment(
 )
 
 #%%
-exp_1.H = .1
+exp_1.H = .5
 t1, X1, Y1, H1, U1, V1 = exp_1.solvePDE()
 
 #%%
@@ -198,8 +223,8 @@ plot1D(t1, H1[:, Ny//2, Nx//2])
 #%%
 for k in range(len(t1)):
   if k % 100 == 0: 
-    #plot2D(H1[k])
-    plt.imshow(H1[k], interpolation='gaussian')
+    plot2D(H1[k])
+    #plt.imshow(H1[k], interpolation='gaussian')
     plt.show()
     
 #%%
