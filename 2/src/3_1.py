@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 h0 = 40
 g = 1
-x0 = 1000
+x0 = 0#1000
 c0 = np.sqrt(g * h0)
 
 xA = lambda t: -c0 * t + x0
@@ -54,8 +54,8 @@ def u_(x, t):
 #  return o
   
 #%%
-x_i, x_f = 0, 2000
-t_i, t_f = 0, 40
+x_i, x_f = -5, 5 #0, 2000
+t_i, t_f = 0, 5
 Nx = 500
 Nt = 100
 x = np.linspace(x_i, x_f, Nx)

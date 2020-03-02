@@ -83,26 +83,60 @@ class Experiment:
   
     return U  
   
+  def ev(self, q, h):
+    l1 = q / h + np.sqrt(self.g * h)
+    l2 = q / h - np.sqrt(self.g * h)
+    return l1, l2
   
-  def solvePDE(self):
+  def solvePDE(self, scheme='lf'):
     
-    y0 = np.zeros(2 * self.Nx)
-    y0[:self.Nx] = self.h0(self.x)
-    y0[self.Nx:] = self.u0(self.x) * self.h0(self.x)
+    h = np.zeros((self.Nt, self.Nx))
+    q = np.zeros((self.Nt, self.Nx))
     
-    y = self.RK4(self.F, y0)
+    h[0] = self.h0(self.x)
+    q[0] = self.u0(self.x) * self.h0(self.x)
     
-    H = y[:, :self.Nx]#.reshape(len(self.t), self.N, self.N)
-    Q = y[:, self.Nx:]#.reshape(len(self.t), self.N, self.N)
     
-    return self.t, self.x, H, Q
+    if scheme == 'lf': # Lax-Friedichs scheme
+    
+      for n in range(self.Nt - 1):
+        h[n+1, 1:-1] = 0.5 * (h[n, 2:] + h[n, :-2]) - 0.5 * self.dt / self.dx * (q[n, 2:] - q[n, :-2])
+        q[n+1, 1:-1] = 0.5 * (q[n, 2:] + q[n, :-2]) - \
+          0.5 * self.dt / self.dx * (q[n, 2:] ** 2 / h[n, 2:] + self.g *  h[n, 2:] ** 2 / 2 - q[n, :-2] ** 2 / h[n, :-2] + self.g *  h[n, :-2] ** 2 / 2) \
+          - self.dt * self.g * h[n, 1:-1] * Sf(self.f, self.g, h[n, 1:-1], q[n, 1:-1])
+          
+        # Boundary
+        h[n+1, 0] = h[n+1, 1]
+        h[n+1, -1] = h[n+1, -2]
+        q[n+1,0] = q[n+1 ,1]
+        q[n+1,-1] = q[n+1, -2]
+    
+    elif scheme == 'rs': # Rusanov scheme      
+      for n in range(self.Nt - 1):
+        l1_l, l2_l = self.ev(q[n, :-2], h[n, :-2])
+        l1_r, l2_r = self.ev(q[n, 2:], h[n, 2:])
+        s1 = np.maximum(np.abs(l1_l), np.abs(l2_l))
+        s2 = np.maximum(np.abs(l1_r), np.abs(l2_r))
+        c = np.maximum(s1, s2)
+        h[n+1, 1:-1] = 0.5 * c * (h[n, 2:] + h[n, :-2]) - 0.5 * (q[n, 2:] - q[n, :-2])
+        q[n+1, 1:-1] = 0.5 * c * (q[n, 2:] + q[n, :-2]) - \
+          0.5 * (q[n, 2:] ** 2 / h[n, 2:] + self.g *  h[n, 2:] ** 2 / 2 - q[n, :-2] ** 2 / h[n, :-2] + self.g *  h[n, :-2] ** 2 / 2) \
+          - self.dt * self.g * h[n, 1:-1] * Sf(self.f, self.g, h[n, 1:-1], q[n, 1:-1])
+          
+        # Boundary
+        h[n+1, 0] = h[n+1, 1]
+        h[n+1, -1] = h[n+1, -2]
+        q[n+1,0] = q[n+1 ,1]
+        q[n+1,-1] = q[n+1, -2]
+    
+    return self.t, self.x, h, q
   
 #%%
 x0 = 1000
 L = 2000
-T = 40
+T = 10
 Nx = 100
-Nt = 20000
+Nt = 5000
 f = 5#0
 g = 9.8#1
 
@@ -124,13 +158,15 @@ exp_1 = Experiment(
 )
 
 #%%
-t, x, H, Q = exp_1.solvePDE()
+t, x, H, Q = exp_1.solvePDE('lf')
 #%%
 plt.plot(x, h0(x))
 plt.show()
 #%%
 #plt.contourf(x[1:-1], t[:200], H[:200,1:-1])
-plt.contourf(x, t, H)
+plt.contourf(x, t[::10], H[::10])
+plt.xlabel("x")
+plt.ylabel("t")
 plt.colorbar()
 plt.show()
 #%%
@@ -138,5 +174,5 @@ plt.contourf(x, t, Q/H)
 plt.colorbar()
 plt.show()
 #%%
-plt.plot(x, H[5000])
+plt.plot(x, H[-1])
 plt.show()
