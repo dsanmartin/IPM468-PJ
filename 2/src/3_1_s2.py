@@ -103,7 +103,7 @@ class Experiment:
         h[n+1, 1:-1] = 0.5 * (h[n, 2:] + h[n, :-2]) - 0.5 * self.dt / self.dx * (q[n, 2:] - q[n, :-2])
         q[n+1, 1:-1] = 0.5 * (q[n, 2:] + q[n, :-2]) - \
           0.5 * self.dt / self.dx * (q[n, 2:] ** 2 / h[n, 2:] + self.g *  h[n, 2:] ** 2 / 2 - q[n, :-2] ** 2 / h[n, :-2] + self.g *  h[n, :-2] ** 2 / 2) \
-          - self.dt * self.g * h[n, 1:-1] * Sf(self.f, self.g, h[n, 1:-1], q[n, 1:-1])
+          - self.dt * self.g * h[n, 1:-1] * self.Sf(self.f, self.g, h[n, 1:-1], q[n, 1:-1])
           
         # Boundary
         h[n+1, 0] = h[n+1, 1]
@@ -143,6 +143,7 @@ g = 9.8#1
 h0 = lambda x: np.piecewise(x, [x < x0, x >= x0], [40, 1]) 
 u0 = lambda x: x * 0
 Sf = lambda f, g, h, Q: f * np.abs(Q) * Q / (8 * g * h ** 3)
+
 
 #%%
 exp_1 = Experiment(
