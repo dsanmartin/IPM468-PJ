@@ -1,5 +1,4 @@
 import numpy as np
-from plot import plot2D
 #%%
 class Experiment1D:
   
@@ -8,8 +7,8 @@ class Experiment1D:
     self.g = kwargs['g']    
     self.Sf = kwargs['Sf']
     
-    self.Nx = kwargs['Nx']
-    self.Nt = kwargs['Nt']
+    self.Nx = kwargs['Nx'] + 1
+    self.Nt = kwargs['Nt'] + 1
     
     self.L = kwargs['L']
     self.T = kwargs['T']

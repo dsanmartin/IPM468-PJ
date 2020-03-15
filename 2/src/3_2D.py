@@ -40,7 +40,7 @@ def h0_(x, y, x0, y0):
   for i in range(len(x)):
     for j in range(len(y)):
       #if x[i,j] <= x0 and y[i,j] <= y0:
-      if x[i] <= x0 and y[j] <= y0:
+      if x[i,j] <= x0 and y[i,j] <= y0:
         H[i, j] = 40
   return H
   
@@ -61,7 +61,7 @@ def h0_(x, y, x0, y0):
 x0 = 1000
 y0 = 1000
 L = 2000
-T = 10 #40
+T = 40
 Nx = 100
 Ny = 100
 Nt = 2000
@@ -76,8 +76,9 @@ print(dx, dy, dt)
 print(dt/dx, dt/dy)
 
 
-#h0 = lambda x, y: h0_(x, y, x0, y0)
-h0 = lambda x, y, R, hp: 1 + hp * (np.sqrt((x - 1000)**2 + (y - 1000)**2) <= R) # Initial 
+h0 = lambda x, y: h0_(x, y, x0, y0)
+#h0 = lambda x, y, R, hp: 1 + hp * (np.sqrt((x - 1000)**2 + (y - 1000)**2) <= R) # Initial 
+#h00 = lambda x, y: 10 + 1 * (np.sqrt((x - 25)**2 + (y - 25)**2) <= 12) + 40 * (np.sqrt((x - 25)**2 + (y - 25)**2) <= 11) # Initial 
 u0 = lambda x, y: x * 0
 v0 = lambda x, y: y * 0
 Sf = lambda f, g, h, Q: f * np.abs(Q) * Q / (8 * g * h ** 3)
@@ -87,8 +88,9 @@ Sf = lambda f, g, h, Q: f * np.abs(Q) * Q / (8 * g * h ** 3)
 
 x = np.linspace(0, L, Nx)
 X, Y = np.meshgrid(x, x)
-j = lambda x, y: h0(x, y, 200, 40)
-plot2D(X, Y, j(X, Y))
+#j = lambda x, y: h0(x, y, 200, 40)
+#j = lambda x, y: h00(x, y)
+plot3D(X, Y, h0(X, Y))
 #%%
 exp_1 = Experiment2D(
   f = f,
@@ -98,17 +100,17 @@ exp_1 = Experiment2D(
   Nx = Nx,
   Ny = Ny,
   Nt = Nt,
-  h0 = j,
+  h0 = h0,
   u0 = u0,
   v0 = v0,
   Sf = Sf
 )
 
 #%%
-t, x, y, H, Q1, Q2 = exp_1.solvePDE('lf')
+t, x, y, H, Q1, Q2 = exp_1.solvePDE('rs')
 #%%
 #plot2D(x, t, H[1])
-n = 2
+n = 1000
 #plt.imshow(H[n], origin="lower")
 plot2D(x, y, H[n])
 #plt.colorbar()
@@ -120,7 +122,7 @@ plot1D(x, h_(x, T[0]))
 plot2D(x, t, h_(X, T))
 
 #%%
-n = 1
+n = -1
 X, Y = np.meshgrid(x, y)
 #plot3D(X, Y, H[500])
 plot3D(X, Y, H[n])

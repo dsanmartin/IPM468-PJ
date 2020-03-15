@@ -1,7 +1,5 @@
 import numpy as np
-import matplotlib.pyplot as plt
-from mpl_toolkits import mplot3d
-#%%
+
 class Experiment:
   
   def __init__(self, **kwargs):
@@ -10,9 +8,9 @@ class Experiment:
     self.g = kwargs['g']
     self.b = kwargs['b']
     
-    self.Nt = kwargs['Nt']
-    self.Nx = kwargs['Nx']
-    self.Ny = kwargs['Ny']
+    self.Nt = kwargs['Nt'] + 1
+    self.Nx = kwargs['Nx'] + 1
+    self.Ny = kwargs['Ny'] + 1
     
     self.xf = kwargs['xf']
     self.yf = kwargs['yf']
@@ -53,7 +51,6 @@ class Experiment:
     
     vy[1:-1, 1:-1] = (v[2:,1:-1] - v[:-2,1:-1]) / (2 * self.dy)
     ux[1:-1, 1:-1] = (u[1:-1,2:] - u[1:-1,:-2]) / (2 * self.dx)
-    
     
     hf = - self.H * (ux + vy)
     uf = self.f * v - self.g * hx - self.b * u
@@ -144,106 +141,3 @@ class Experiment:
     
     # Return domain and approximations
     return self.t, X, Y, H, U, V
-#%%
-# Plots
-def plot1D(x, y):
-  plt.plot(x, y)
-  plt.grid(True)
-  plt.show()   
-  
-def plot2D(z):
-  #plt.contourf(X, Y, H[k], vmin=np.min(H), vmax=np.max(H)))
-  plt.imshow(z, vmin=np.min(z), vmax=np.max(z), 
-             origin="lower", extent=[0, 1, 0, 1])
-  #plt.quiver(X, Y, U[10], V[0])
-  plt.colorbar()
-  plt.show()
-  
-def plot3D(x, y, z):
-  ax = plt.gca(projection='3d')
-  ax.plot_surface(x, y, z)
-  plt.show()
-  
-#%%
-def airy(x, t, H, k, w):
-  return .5 * H * np.cos(k * x - w * t)
-#%%
-# Initial conditions
-h0 = lambda x, y, R, hp: 1 + hp * (np.sqrt((x - .5)**2 + (y - .5)**2) <= R) # Initial 
-u0 = lambda x, y: x * 0
-v0 = lambda x, y: x * 0
-#h0g = lambda x, y: 1 + 0.11 * np.exp(-10*((x-.5)**2 + (y-.5)**2))
-
-#%%
-
-# Model parameters
-H_ = .1
-f_ = 0
-g_ = 1
-b_ = 2
-
-# Domain limits
-xf = 1
-yf = 1
-tf = 2
-
-# Domain grid size
-Nt = 500
-Nx = 100
-Ny = Nx
-
-bc = 1
-
-# Create experiment
-exp_1 = Experiment(
-  H = H_,
-  f = f_,
-  g = g_,
-  b = b_,
-  Nx = Nx,
-  Ny = Ny,
-  Nt = Nt,
-  xf = xf,
-  yf = yf,
-  tf = tf,
-  bc = 1,
-  h0 = lambda x, y: h0(x, y, .1, .1),
-  #h0 = h0g,
-  u0 = u0,
-  v0 = v0,
-)
-
-#%%
-exp_1.H = .5
-t1, X1, Y1, H1, U1, V1 = exp_1.solvePDE()
-
-#%%
-plot1D(t1, H1[:, Ny//2, Nx//2])
-
-#%%
-for k in range(len(t1)):
-  if k % 100 == 0: 
-    plot2D(H1[k])
-    #plt.imshow(H1[k], interpolation='gaussian')
-    plt.show()
-    
-#%%
-plot3D(X1, Y1, H1)
-
-#%%
-N = 500
-x = np.linspace(0, xf, N)
-t = np.linspace(0, tf, N)
-T = 0.05
-k = 2 * np.pi / xf
-w = 2 * np.pi / T
-eta = airy(x, t, .1, k, w)
-plot1D(x, eta)
-plot1D(t, eta)
-# #%%
-# XX, TT = np.meshgrid(x,t)
-# Z = airy(XX, TT, 1, k, w)
-# #%%
-# plt.contourf(XX, TT, Z)
-# plt.show()
-
