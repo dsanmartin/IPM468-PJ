@@ -105,6 +105,12 @@ venv.bak/
 
 
 # Others
+
+# Project 1
 #1/prototype/data/
 1/prototype/
 1/src/data
+
+# Project 2
+2/src/data
+2/src/test.py

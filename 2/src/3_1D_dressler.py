@@ -1,6 +1,6 @@
 import pathlib
 import numpy as np
-from embalse import Experiment1D
+from dambreak import Experiment1D
 from plot import plot1D, plot2D, plot3D, compare
 
 #%%

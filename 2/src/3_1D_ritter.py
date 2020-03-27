@@ -1,6 +1,6 @@
 import pathlib
 import numpy as np
-from embalse import Experiment1D
+from dambreak import Experiment1D
 from plot import plot1D, plot2D, plot3D, compare
 
 #%%
@@ -94,9 +94,9 @@ x_0 = 1000
 L = 2000
 T = 40 # 1
 Nx = 200
-Nt = 2000 # 5000
+Nt = 5000 # 5000
 f = 0
-g = 1#9.8 #1
+g = 1 #9.8 #1
 
 h0_ = lambda x, x_0, h_0, h_d: np.piecewise(x, [x < x_0, x >= x_0], [h_0, h_d]) 
 h0 = lambda x: h0_(x, x_0, h_0, h_d) # Initial condition h

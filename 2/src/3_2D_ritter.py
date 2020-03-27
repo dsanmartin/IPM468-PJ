@@ -1,6 +1,6 @@
 import numpy as np
-from embalse import Experiment2D
-from plot import *
+from dambreak import Experiment2D
+from plot import plot1D, plot2D, plot3D
 #%%
 h0 = 40
 g = 1
@@ -110,13 +110,10 @@ exp_1 = Experiment2D(
 t, x, y, H, Q1, Q2 = exp_1.solvePDE('rs')
 #%%
 #plot2D(x, t, H[1])
-n = 1000
+n = 1900
 #plt.imshow(H[n], origin="lower")
 plot2D(x, y, H[n])
 #plt.colorbar()
-
-#%% Initial condition
-plot1D(x, h_(x, T[0]))
 
 #%% Evolution
 plot2D(x, t, h_(X, T))
@@ -127,3 +124,15 @@ X, Y = np.meshgrid(x, y)
 #plot3D(X, Y, H[500])
 plot3D(X, Y, H[n])
 #plot3D(X, T, h_(X, T))
+
+#%%
+import matplotlib.pyplot as plt
+
+plt.quiver(X,Y, Q1[-1], Q2[-1])
+plt.show()
+
+
+
+
+
+
