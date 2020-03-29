@@ -27,7 +27,7 @@ def h_(x, t):
 
   
 def u_(x, t):
-  o = np.zeros_like(x)
+  o = np.ones_like(x) * 1e-16
   # Cases, first and third case just keep zeros
   # Second case
   idx = np.array(((x >= xA(t)) & (x <= xB(t))))
@@ -36,7 +36,7 @@ def u_(x, t):
   return o
 
 def h0_(x, y, x0, y0):
-  H = np.zeros((len(x), len(y))) 
+  H = np.ones((len(x), len(y))) *  1e-16
   for i in range(len(x)):
     for j in range(len(y)):
       #if x[i,j] <= x0 and y[i,j] <= y0:
@@ -64,8 +64,8 @@ L = 2000
 T = 40
 Nx = 100
 Ny = 100
-Nt = 2000
-f = 1#0
+Nt = 500
+f = 0#0
 g = 1#1
 
 
@@ -86,11 +86,11 @@ Sf = lambda f, g, h, Q: f * np.abs(Q) * Q / (8 * g * h ** 3)
 #plt.imshow(h0(X, Y), origin="lower")
 #plot2D(X, Y, h0(x, y))
 
-x = np.linspace(0, L, Nx)
-X, Y = np.meshgrid(x, x)
+#x = np.linspace(0, L, Nx)
+#X, Y = np.meshgrid(x, x)
 #j = lambda x, y: h0(x, y, 200, 40)
 #j = lambda x, y: h00(x, y)
-plot3D(X, Y, h0(X, Y))
+#plot3D(X, Y, h0(X, Y))
 #%%
 exp_1 = Experiment2D(
   f = f,
@@ -110,16 +110,14 @@ exp_1 = Experiment2D(
 t, x, y, H, Q1, Q2 = exp_1.solvePDE('rs')
 #%%
 #plot2D(x, t, H[1])
-n = 1900
+n = -100
 #plt.imshow(H[n], origin="lower")
 plot2D(x, y, H[n])
 #plt.colorbar()
 
-#%% Evolution
-plot2D(x, t, h_(X, T))
 
 #%%
-n = -1
+n = -100
 X, Y = np.meshgrid(x, y)
 #plot3D(X, Y, H[500])
 plot3D(X, Y, H[n])

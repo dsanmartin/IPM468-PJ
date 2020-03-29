@@ -5,16 +5,7 @@ from plot import plot1D, plot2D, plot3D, compare
 
 #%%
 def h_(x, t, h0, x0, g, c0, xA, xB):
-  #o = np.zeros((len(t), len(x)))
-  # for n in range(len(t)):
-  #   for i in range(len(x)):
-  #     if x[i] <= xA(t[n]):
-  #       o[n, i] = h0
-  #     elif xA(t[n]) < x[i] <= xB(t[n]):
-  #        tmp = (-(x[i] - x0) / t[n] + 2 * c0) ** 2 / (9 * g)
-  #        print(tmp)
-  #        o[n, i] = tmp
-  
+
   # Data to return
   o = np.zeros_like(x)
   # Cases 
@@ -89,14 +80,14 @@ plot3D(X, T, UD)
 
 #%% Numerical Dressler
 h_0 = 40
-h_d = 0
+h_d = 1e-14
 x_0 = 1000
 L = 2000
 T = 40 # 1
-Nx = 200
-Nt = 2000 # 5000
+Nx = 200 #200
+Nt = 10 # 5000
 g = 1
-f = 8 * g / (40 ** 2)
+f = .1 #8 * g / (40 ** 2)
 
 h0_ = lambda x, x_0, h_0, h_d: np.piecewise(x, [x <= x_0, x > x_0], [h_0, h_d]) 
 h0 = lambda x: h0_(x, x_0, h_0, h_d) # Initial condition h
@@ -122,11 +113,16 @@ tr, xr, Hr, Qr = dressler.solvePDE('rs')
 
 #%%
 k = -1
-#%%
 plot1D(xl, Hl[k])
+#%%
+for k in range(Nt):
+  print(k)
+  plot1D(xl, Hl[k])
 
 #%%
-plot1D(xr, Hr[k])
+for k in range(300, Nt):
+  print(k)
+  plot1D(xr, Hr[k])
 
 #%%
 plot2D(xl, tl, Hl)
@@ -146,7 +142,15 @@ plot3D(XRS, TRS, Hr[::10,:])
 
 
 #%%
+print("h(x,t)")
 compare(xl, HD[-1], Hl[-1], Hr[-1])
+print("Error Lax-Friedrichs: ", np.linalg.norm(HD[-1] - Hl[-1]))
+print("Error Rusanov: ", np.linalg.norm(HD[-1] - Hr[-1]))
+
+print("u(x,t)")
+compare(xl, UD[-1], Ql[-1] / Hl[-1], Qr[-1] / Hr[-1])
+print("Error Lax-Friedrichs: ", np.linalg.norm(UD[-1] - Ql[-1] / Hl[-1]))
+print("Error Rusanov: ", np.linalg.norm(UD[-1] - Qr[-1] / Hr[-1]))
 
 #%%Save data
 DIR = 'data/3/3/' # Directory name
@@ -160,24 +164,25 @@ data1 = np.zeros((M * N, 8)) # Evolution
 Ul = Ql / Hl
 Ur = Qr / Hr
 
-data1[:,0] = XLF[::4,::4].flatten()
-data1[:,1] = TLF[::4,::4].flatten()
+data1[:,0] = XLF[::1,::4].flatten()
+data1[:,1] = TLF[::1,::4].flatten()
 data1[:,2] = HD[::4,::4].flatten()
-data1[:,3] = Hl[::40,::4].flatten()
-data1[:,4] = Hr[::40,::4].flatten()
+data1[:,3] = Hl[::10,::4].flatten()
+data1[:,4] = Hr[::10,::4].flatten()
 data1[:,5] = UD[::4,::4].flatten()
-data1[:,6] = Ul[::40,::4].flatten()
-data1[:,7] = Ur[::40,::4].flatten()
-
+data1[:,6] = Ul[::10,::4].flatten()
+data1[:,7] = Ur[::10,::4].flatten()
 
 np.savetxt(DIR + 'dressler_1D.csv', data1, fmt='%.16f', delimiter=' ', header='x t a l r u ul ur', comments="") # Save data
 
 #%%
-data2 = np.zeros((201, 4)) # Last value
+data2 = np.zeros((201, 7)) # Last value
 
 data2[:,0] = xr
 data2[:,1] = HD[-1]
 data2[:,2] = Hl[-1]
 data2[:,3] = Hr[-1]
-
+data2[:,4] = UD[-1]
+data2[:,5] = Ul[-1]
+data2[:,6] = Ur[-1]
 np.savetxt(DIR + 'compare_dressler_1D.csv', data2, fmt='%.16f', delimiter=' ', header='x h l r', comments="") # Save data

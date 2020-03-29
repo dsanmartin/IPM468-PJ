@@ -5,16 +5,6 @@ from plot import plot1D, plot2D, plot3D, compare
 
 #%%
 def h_(x, t, h0, hm, hd, x0, g, c0, xA, xB, xC):
-  # # Data to return
-  # o = np.zeros_like(x)
-  # # Cases 
-  # # First case
-  # idx_1 = np.array((x <= xA(t))) # Index where condition 1 is 
-  # o[idx_1] = h0 
-  # # Second case
-  # idx_2 = np.array((x > xA(t)) & (x <= xB(t)))
-  # o[idx_2] = (-(x[idx_2]-x0)/t[idx_2] + 2 * c0) ** 2 / (9 * g)
-  # # Third case, just keep zeros
   
   # Data to return
   o = np.zeros_like(x)
@@ -55,7 +45,7 @@ xC_ = lambda t, vc, x0: x0 + vc * t
 # Parameters
 h_0 = 40
 h_m = 20
-h_d = 1
+h_d = 10
 g = 1
 x_0 = 1000
 c_0 = np.sqrt(g * h_0)
@@ -106,12 +96,12 @@ plot3D(X, T, US)
 
 #%% Numerical Stoker
 h_0 = 40
-h_d = 1
+h_d = 10
 x_0 = 1000
 L = 2000
 T = 40 # 1
 Nx = 200
-Nt = 2000 # 5000
+Nt = 500 # 5000
 f = 0
 g = 1#9.8 #1
 
@@ -163,7 +153,11 @@ plot3D(XRS, TRS, Hr[::10,:])
 
 
 #%%
+print("h(x,t)")
 compare(xl, HS[-1], Hl[-1], Hr[-1])
+print("Error Lax-Friedrichs: ", np.linalg.norm(HS[-1] - Hl[-1]))
+print("Error Rusanov: ", np.linalg.norm(HS[-1] - Hr[-1]))
+
 
 #%%Save data
 DIR = 'data/3/2/' # Directory name
@@ -177,24 +171,26 @@ data1 = np.zeros((M * N, 8)) # Evolution
 Ul = Ql / Hl
 Ur = Qr / Hr
 
-data1[:,0] = XLF[::4,::4].flatten()
-data1[:,1] = TLF[::4,::4].flatten()
+data1[:,0] = XLF[::1,::4].flatten()
+data1[:,1] = TLF[::1,::4].flatten()
 data1[:,2] = HS[::4,::4].flatten()
-data1[:,3] = Hl[::40,::4].flatten()
-data1[:,4] = Hr[::40,::4].flatten()
+data1[:,3] = Hl[::10,::4].flatten()
+data1[:,4] = Hr[::10,::4].flatten()
 data1[:,5] = US[::4,::4].flatten()
-data1[:,6] = Ul[::40,::4].flatten()
-data1[:,7] = Ur[::40,::4].flatten()
-
+data1[:,6] = Ul[::10,::4].flatten()
+data1[:,7] = Ur[::10,::4].flatten()
 
 np.savetxt(DIR + 'stoker_1D.csv', data1, fmt='%.16f', delimiter=' ', header='x t a l r u ul ur', comments="") # Save data
 
 #%%
-data2 = np.zeros((201, 4)) # Last value
+data2 = np.zeros((201, 7)) # Last value
 
 data2[:,0] = xr
 data2[:,1] = HS[-1]
 data2[:,2] = Hl[-1]
 data2[:,3] = Hr[-1]
+data2[:,4] = US[-1]
+data2[:,5] = Ul[-1]
+data2[:,6] = Ur[-1]
 
 np.savetxt(DIR + 'compare_stoker_1D.csv', data2, fmt='%.16f', delimiter=' ', header='x h l r', comments="") # Save data

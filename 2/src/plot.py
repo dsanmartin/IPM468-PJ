@@ -24,8 +24,9 @@ def plot3D(x, y, z):
   plt.show()
   
 def compare(x, y1, y2, y3):
-  plt.plot(x, y1)
-  plt.plot(x, y2)
-  plt.plot(x, y3)
+  plt.plot(x, y1, label="Solution")
+  plt.plot(x, y2, label="Lax-Friedrichs")
+  plt.plot(x, y3, label="Rusanov")
+  plt.legend()
   plt.grid(True)
   plt.show()
