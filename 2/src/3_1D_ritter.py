@@ -88,9 +88,6 @@ Nt = 500 # 5000
 f = 0
 g = 1 #9.8 #1
 
-dx = L / Nx
-dt = T / Nt
-print(dt/dx)
 
 h0_ = lambda x, x_0, h_0, h_d: np.piecewise(x, [x <= x_0, x > x_0], [h_0, h_d]) 
 h0 = lambda x: h0_(x, x_0, h_0, h_d) # Initial condition h
@@ -118,10 +115,7 @@ tr, xr, Hr, Qr = ritter.solvePDE('rs')
 #%%
 k = -1
 #%%
-plot1D(xl, Hl[k])
-
-
-#%%
+plot1D(xl, Hr[k])
 plot1D(xr, Qr[k]/Hr[k])
 
 #%%

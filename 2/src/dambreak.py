@@ -24,7 +24,7 @@ class Experiment1D:
 
   
   def ev(self, q, h):
-    idx = np.array((h <= 0)) # indexes where h == 0
+    idx = np.array((h == 0)) # indexes where h == 0
     h[idx] = 1  
     u = q / h
     l1 = u + np.sqrt(self.g * h)
@@ -83,9 +83,7 @@ class Experiment1D:
             self.FLF1(h[n, 1:-1], h[n, 2:], q[n, 1:-1], q[n, 2:]) - \
             self.FLF1(h[n, :-2], h[n, 1:-1],  q[n, :-2], q[n, 1:-1])
           )
-            
-        #h[n+1, 1:-1] = 0.5 * (h[n, 2:] - h[n,:-2]) - 0.5 * self.dt / self.dx * (self.F1(q[n, 2:]) - self.F1(q[n, :-2]))
-            
+               
         # To avoid zero division, replace h and q by 1
         idx1 = np.array((h[n] == 0)) # indexes where h == 0
         h[n, idx1] = 1 
@@ -95,7 +93,7 @@ class Experiment1D:
           - self.dt / self.dx * (
             self.FLF2(h[n, 1:-1], h[n, 2:], q[n, 1:-1], q[n, 2:]) - \
             self.FLF2(h[n, :-2], h[n, 1:-1],  q[n, :-2], q[n, 1:-1])
-          ) #+ self.dt * self.S(h[n, 1:-1], q[n, 1:-1])
+          )
         
         # Set values replaced by 1 with 0
         h[n, idx1] = 0
@@ -112,9 +110,7 @@ class Experiment1D:
     
     elif scheme == 'rs': # Rusanov scheme      
       for n in range(self.Nt - 1):
-        
-        print(h[n])
-        
+
         # Compute water height
         h[n+1, 1:-1] = h[n, 1:-1] \
           - self.dt / self.dx * (
@@ -123,7 +119,7 @@ class Experiment1D:
           )
             
         # To avoid zero division, replace h and q by 1
-        idx1 = np.array((h[n] <= 0)) # indexes where h = 0
+        idx1 = np.array((h[n] == 0)) # indexes where h = 0
         h[n, idx1] = 1
                    
         # Flow
@@ -132,18 +128,20 @@ class Experiment1D:
             self.FR2(h[n, 1:-1], h[n, 2:], q[n, 1:-1], q[n, 2:]) - \
             self.FR2(h[n, :-2], h[n, 1:-1],  q[n, :-2], q[n, 1:-1])
           ) #+ self.dt * self.S(h[n, 1:-1], q[n, 1:-1])
-              
-        
-        q[n+1, 1:-1] += self.dt * self.S(h[n+1, 1:-1], q[n+1, 1:-1])
+            
         
         # Set values replaced by 1 with 0
         h[n, idx1] = 0
         q[n+1, idx1] = 0
+              
+        # Correction of S(U)
+        q[n+1, 1:-1] += self.dt * self.S(h[n+1, 1:-1], q[n+1, 1:-1])
         
-        
-        print(h[n+1])
+        # Remove S(U) correction errors
+        idx2 = np.array((q[n+1] <= 0)) # indexes where q < 0
+        q[n+1, idx2] = 0
           
-        # Boundary
+        # Boundary conditions
         h[n+1, 0] = h[n+1, 1]
         h[n+1, -1] = h[n+1, -2]
         q[n+1,0] = q[n+1 ,1]

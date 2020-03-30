@@ -25,7 +25,7 @@ def h_(x, t, h0, hm, hd, x0, g, c0, xA, xB, xC):
   return o
 
   
-def u_(x, t, x0, c0, xA, xB):
+def u_(x, t, x0, c0, cm, xA, xB, xC):
   o = np.zeros_like(x)
   # Cases, first and third case just keep zeros
   # Second case
@@ -33,6 +33,9 @@ def u_(x, t, x0, c0, xA, xB):
   idx2 = np.array((t == 0)) # indexes where t == 0
   t[idx2] = 1
   o[idx] = 2 / 3 * ((x[idx] - x0) / t[idx] + c0)
+  # Third case
+  idx3 = np.array((x > xB(t)) & (x <= xC(t)))
+  o[idx3] = 2 * (c0 - cm)
   o[idx2] = 0
   
   return o
@@ -44,7 +47,7 @@ xC_ = lambda t, vc, x0: x0 + vc * t
 #%% Analytic
 # Parameters
 h_0 = 40
-h_m = 20
+h_m = 18
 h_d = 10
 g = 1
 x_0 = 1000
@@ -59,7 +62,7 @@ xB = lambda t: xB_(t, u_m, c_m, x_0)
 xC = lambda t: xC_(t, v_c, x_0)
 
 h = lambda x, t: h_(x, t, h_0, h_m, h_d, x_0, g, c_0, xA, xB, xC)
-u = lambda x, t: u_(x, t, x_0, c_0, xA, xC)
+u = lambda x, t: u_(x, t, x_0, c_0, c_m, xA, xB, xC)
 
 x_i, x_f = 0, 2000
 t_i, t_f = 0, 40
@@ -158,6 +161,10 @@ compare(xl, HS[-1], Hl[-1], Hr[-1])
 print("Error Lax-Friedrichs: ", np.linalg.norm(HS[-1] - Hl[-1]))
 print("Error Rusanov: ", np.linalg.norm(HS[-1] - Hr[-1]))
 
+print("u(x,t)")
+compare(xl, US[-1], Ql[-1] / Hl[-1], Qr[-1] / Hr[-1])
+print("Error Lax-Friedrichs: ", np.linalg.norm(US[-1] - Ql[-1] / Hl[-1]))
+print("Error Rusanov: ", np.linalg.norm(US[-1] - Qr[-1] / Hr[-1]))
 
 #%%Save data
 DIR = 'data/3/2/' # Directory name
@@ -193,4 +200,4 @@ data2[:,4] = US[-1]
 data2[:,5] = Ul[-1]
 data2[:,6] = Ur[-1]
 
-np.savetxt(DIR + 'compare_stoker_1D.csv', data2, fmt='%.16f', delimiter=' ', header='x h l r', comments="") # Save data
+np.savetxt(DIR + 'compare_stoker_1D.csv', data2, fmt='%.16f', delimiter=' ', header='x h l r u ul ur', comments="") # Save data
