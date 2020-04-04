@@ -41,7 +41,7 @@ class Experiment1D:
   def F2(self, h, q):
     return q ** 2 / h + 0.5 * self.g * h ** 2
   
-  # Lax-Friedichs scheme for F components 
+  # Lax-Friedrichs scheme for F components 
   def FLF1(self, hl, hr, ql, qr):
     return 0.5 * (self.F1(qr) + self.F1(ql)) - 0.5 * self.dx / self.dt * (hr - hl)
   
@@ -73,7 +73,7 @@ class Experiment1D:
     q[0] = self.u0(self.x) * self.h0(self.x)
     
     
-    if scheme == 'lf': # Lax-Friedichs scheme
+    if scheme == 'lf': # Lax-Friedrichs scheme
     
       for n in range(self.Nt - 1):
         
@@ -99,8 +99,12 @@ class Experiment1D:
         h[n, idx1] = 0
         q[n+1, idx1] = 0
         
-        # Correction of S(U)
+        # Splitting S(U)
         q[n+1, 1:-1] += self.dt * self.S(h[n+1, 1:-1], q[n+1, 1:-1])
+        
+         # Remove S(U) correction errors
+        idx2 = np.array((q[n+1] <= 0)) # indexes where q < 0
+        q[n+1, idx2] = 0
         
         # Boundary
         h[n+1, 0] = h[n+1, 1]
@@ -156,9 +160,9 @@ class Experiment2D:
     self.g = kwargs['g']    
     self.Sf = kwargs['Sf']
     
-    self.Nx = kwargs['Nx']
-    self.Ny = kwargs['Ny']
-    self.Nt = kwargs['Nt']
+    self.Nx = kwargs['Nx'] + 1
+    self.Ny = kwargs['Ny'] + 1
+    self.Nt = kwargs['Nt'] + 1
     
     self.L = kwargs['L']
     self.T = kwargs['T']
@@ -171,32 +175,33 @@ class Experiment2D:
     self.y = np.linspace(0, self.L, self.Ny)
     self.t = np.linspace(0, self.T, self.Nt)
     
+    # GRID
+    self.X, self.Y = np.meshgrid(self.x, self.y)
+    
     self.dx = self.x[1] - self.x[0]
     self.dy = self.y[1] - self.y[0]
     self.dt = self.t[1] - self.t[0]
 
 
   def evF(self, q1, h):
-    idx = np.array((h == 0)) # indexes where h == 0
+    idx = np.array((h <= 0)) # indexes where h == 0
     h[idx] = 1 
     u = q1 / h
     l1 = u + np.sqrt(self.g * h)
     l2 = u
     l3 = u - np.sqrt(self.g * h)
-    h[idx] = 0 
     l1[idx] = 0 
     l2[idx] = 0 
     l3[idx] = 0 
     return l1, l2, l3
   
   def evG(self, q2, h):
-    idx = np.array((h == 0)) # indexes where h == 0
+    idx = np.array((h <= 0)) # indexes where h == 0
     h[idx] = 1
     v = q2 / h
     l1 = v + np.sqrt(self.g * h)
     l2 = v
     l3 = v - np.sqrt(self.g * h)
-    h[idx] = 0 
     l1[idx] = 0
     l2[idx] = 0 
     l3[idx] = 0 
@@ -231,7 +236,7 @@ class Experiment2D:
   def G3(self, h, q2):
     return q2 ** 2 / h + 0.5 * self.g * h ** 2
   
-  # Lax-Friedichs scheme for F components 
+  # Lax-Friedrichs scheme for F components 
   def FLF1(self, hl, hr, q1l, q1r):
     return 0.5 * (self.F1(q1r) + self.F1(q1l)) - 0.5 * self.dx / self.dt * (hr - hl)
   
@@ -241,7 +246,7 @@ class Experiment2D:
   def FLF3(self, hl, hr, q1l, q1r, q2l, q2r):
     return 0.5 * (self.F3(hr, q1r, q2r) + self.F3(hl, q1l, q2l)) - 0.5 * self.dx / self.dt * (q2r - q2l)
   
-  # Lax-Friedichs scheme for G components 
+  # Lax-Friedrichs scheme for G components 
   def GLF1(self, hl, hr, q2l, q2r):
     return 0.5 * (self.G1(q2r) + self.G1(q2l)) - 0.5 * self.dx / self.dt * (hr - hl)
   
@@ -281,38 +286,36 @@ class Experiment2D:
   def S2(self, h, q1):
     return - self.g * h * self.Sf(self.f, self.g, h, q1)
   
-  def S3(self,h, q2):
+  def S3(self, h, q2):
     return - self.g * h * self.Sf(self.f, self.g, h, q2)
 
   
   def solvePDE(self, scheme='lf'):
-    
-    X, Y = np.meshgrid(self.x, self.y)
-    
+        
     h = np.zeros((self.Nt, self.Nx, self.Ny))
     q1 = np.zeros((self.Nt, self.Nx, self.Ny))
     q2 = np.zeros((self.Nt, self.Nx, self.Ny))
     
-    h[0] = self.h0(X, Y)
-    q1[0] = self.u0(X, Y) * self.h0(X, Y)
-    q2[0] = self.v0(X, Y) * self.h0(X, Y)
+    h[0] = self.h0(self.X, self.Y)
+    q1[0] = self.u0(self.X, self.Y) * self.h0(self.X, self.Y)
+    q2[0] = self.v0(self.X, self.Y) * self.h0(self.X, self.Y)
     
-    if scheme == 'lf': # Lax-Friedichs scheme
+    if scheme == 'lf': # Lax-Friedrichs scheme
     
       for n in range(self.Nt - 1):
         
-        h[n+1, 1:-1, 1:-1] = h[n, 1:-1, 1:-1] \
-          - self.dt / self.dx * (
+        h[n+1, 1:-1, 1:-1] = h[n, 1:-1, 1:-1] - \
+            self.dt / self.dx * (
             self.FLF1(h[n, 1:-1, 1:-1], h[n, 1:-1, 2:], q1[n, 1:-1, 1:-1], q1[n, 1:-1, 2:]) - \
             self.FLF1(h[n, 1:-1, :-2], h[n, 1:-1, 1:-1],  q1[n, 1:-1, :-2], q1[n, 1:-1, 1:-1])
-          ) \
-          - self.dt / self.dy * (
+          ) - \
+            self.dt / self.dy * (
             self.GLF1(h[n, 1:-1, 1:-1], h[n, 2:, 1:-1], q2[n, 1:-1, 1:-1], q2[n, 2:, 1:-1]) - \
             self.GLF1(h[n, :-2, 1:-1], h[n, 1:-1, 1:-1], q2[n, :-2, 1:-1], q2[n, 1:-1, 1:-1])
           )
           
         # # To avoid zero division, replace h and q by 1
-        idx1 = np.array((h[n] == 0)) # indexes where h == 0
+        idx1 = np.array((h[n] <= 1e-2)) # indexes where h == 0
         #idx2 = np.array((q1[n] == 0)) # indexes where q == 0
         #idx3 = np.array((q2[n] == 0)) # indexes where q == 0
         h[n, idx1] = 1 
@@ -327,8 +330,10 @@ class Experiment2D:
           - self.dt / self.dy * (
             self.GLF2(h[n, 1:-1, 1:-1], h[n, 2:, 1:-1], q1[n, 1:-1, 1:-1], q1[n, 2:, 1:-1], q2[n, 1:-1, 1:-1], q2[n, 2:, 1:-1]) - \
             self.GLF2(h[n, :-2, 1:-1], h[n, 1:-1, 1:-1], q1[n, :-2, 1:-1], q1[n, 1:-1, 1:-1], q2[n, :-2, 1:-1], q2[n, 1:-1, 1:-1])
-          ) + self.dt * self.S2(h[n, 1:-1, 1:-1], q1[n, 1:-1, 1:-1]) 
+          )
           
+        # Splitting of S(U)
+        q1[n+1, 1:-1, 1:-1] += self.dt * self.S2(h[n, 1:-1, 1:-1], q1[n, 1:-1, 1:-1])
         
         q2[n+1, 1:-1, 1:-1] = q2[n, 1:-1, 1:-1] \
           - self.dt / self.dx * (
@@ -336,16 +341,30 @@ class Experiment2D:
             self.FLF3(h[n, 1:-1, :-2], h[n, 1:-1, 1:-1], q1[n, 1:-1, :-2], q1[n, 1:-1, 1:-1], q2[n, 1:-1, :-2], q2[n, 1:-1, 1:-1])
           ) \
           - self.dt / self.dy * (
-            self.GLF3(h[n, 1:-1, 1:-1], h[n, 2:, 1:-1], q1[n, 1:-1, 1:-1], q1[n, 2:, 1:-1]) - \
-            self.GLF3(h[n, :-2, 1:-1], h[n, 1:-1, 1:-1], q1[n, :-2, 1:-1], q1[n, 1:-1, 1:-1])
-          ) + self.dt * self.S3(h[n, 1:-1, 1:-1], q2[n, 1:-1, 1:-1])
-            
+            self.GLF3(h[n, 1:-1, 1:-1], h[n, 2:, 1:-1], q2[n, 1:-1, 1:-1], q2[n, 2:, 1:-1]) - \
+            self.GLF3(h[n, :-2, 1:-1], h[n, 1:-1, 1:-1], q2[n, :-2, 1:-1], q2[n, 1:-1, 1:-1])
+          ) #+ self.dt * self.S3(h[n, 1:-1, 1:-1], q2[n, 1:-1, 1:-1])
+        
+        # Splitting S(U)
+        q2[n+1, 1:-1, 1:-1] += self.dt * self.S3(h[n, 1:-1, 1:-1], q2[n, 1:-1, 1:-1])
+        
+        
+        
+        
+        # Remove S(U) correction errors
+        # idx = np.array((h[n+1] < 1e-2) | (h[n+1] > 4e1)) # indexes where q < 0
+        # idx2 = np.array((q1[n+1] < 1e-2) | (h[n+1] > 4e1)) # indexes where q < 0
+        # idx3 = np.array((q2[n+1] < 1e-2) | (h[n+1] > 4e1)) # indexes where q < 0
+        # h[n+1, idx] = 0
+        # h[n+1, idx2] = 0
+        # h[n+1, idx3] = 0
+        # q1[n+1, idx2] = 0
+        # q2[n+1, idx3] = 0
+        
         # Set values replaced by 1 with 0
         h[n, idx1] = 0
         q1[n+1, idx1] = 0
-        #q1[n+1, idx2] = 0
         q2[n+1, idx1] = 0
-        #q2[n+1, idx3] = 0
         
         # Boundary
         h[n+1, :, 0] = h[n+1, :, 1]
@@ -387,25 +406,34 @@ class Experiment2D:
           - self.dt / self.dy * (
             self.GR2(h[n, 1:-1, 1:-1], h[n, 2:, 1:-1], q1[n, 1:-1, 1:-1], q1[n, 2:, 1:-1], q2[n, 1:-1, 1:-1], q2[n, 2:, 1:-1]) - \
             self.GR2(h[n, :-2, 1:-1], h[n, 1:-1, 1:-1], q1[n, :-2, 1:-1], q1[n, 1:-1, 1:-1], q2[n, :-2, 1:-1], q2[n, 1:-1, 1:-1])
-          ) + self.dt * self.S2(h[n, 1:-1, 1:-1], q1[n, 1:-1, 1:-1]) 
+          ) 
+            
+        # Splitting of S(U)
+        q1[n+1, 1:-1, 1:-1] += self.dt * self.S2(h[n, 1:-1, 1:-1], q1[n, 1:-1, 1:-1])
           
-        
         q2[n+1, 1:-1, 1:-1] = q2[n, 1:-1, 1:-1] \
           - self.dt / self.dx * (
             self.FR3(h[n, 1:-1, 1:-1], h[n, 1:-1, 2:], q1[n, 1:-1, 1:-1], q1[n, 1:-1, 2:], q2[n, 1:-1, 1:-1], q2[n, 1:-1, 2:]) - \
             self.FR3(h[n, 1:-1, :-2], h[n, 1:-1, 1:-1], q1[n, 1:-1, :-2], q1[n, 1:-1, 1:-1], q2[n, 1:-1, :-2], q2[n, 1:-1, 1:-1])
           ) \
           - self.dt / self.dy * (
-            self.GR3(h[n, 1:-1, 1:-1], h[n, 2:, 1:-1], q1[n, 1:-1, 1:-1], q1[n, 2:, 1:-1]) - \
-            self.GR3(h[n, :-2, 1:-1], h[n, 1:-1, 1:-1], q1[n, :-2, 1:-1], q1[n, 1:-1, 1:-1])
-          ) + self.dt * self.S3(h[n, 1:-1, 1:-1], q2[n, 1:-1, 1:-1])
+            self.GR3(h[n, 1:-1, 1:-1], h[n, 2:, 1:-1], q2[n, 1:-1, 1:-1], q2[n, 2:, 1:-1]) - \
+            self.GR3(h[n, :-2, 1:-1], h[n, 1:-1, 1:-1], q2[n, :-2, 1:-1], q2[n, 1:-1, 1:-1])
+          ) 
             
+        # Splitting S(U)
+        q2[n+1, 1:-1, 1:-1] += self.dt * self.S3(h[n, 1:-1, 1:-1], q2[n, 1:-1, 1:-1])
+        
         # Set values replaced by 1 with 0
         h[n, idx1] = 0
         q1[n+1, idx1] = 0
-        #q1[n+1, idx2] = 0
         q2[n+1, idx1] = 0
-        #q2[n+1, idx3] = 0
+            
+        # Remove S(U) correction errors
+        # idx2 = np.array((q1[n+1] < 0)) # indexes where q < 0
+        # idx3 = np.array((q2[n+1] < 0)) # indexes where q < 0
+        # q1[n+1, idx2] = 0
+        # q2[n+1, idx3] = 0
         
         # Boundary
         h[n+1, :, 0] = h[n+1, :, 1]
@@ -418,38 +446,5 @@ class Experiment2D:
         q2[n+1, 0, :] = q2[n+1, 1, :]
         q2[n+1,-1, :] = q2[n+1,-2, :]
     
-    return self.t, self.x, self.y, h, q1, q2
+    return self.t, self.X, self.Y, h, q1, q2
   
-  def solvePDE_old(self, scheme='lf'):
-    
-    h = np.zeros((self.Nt, self.Nx, self.Ny))
-    q = np.zeros((self.Nt, self.Nx, self.Ny))
-    
-    h[0] = self.h0(self.x, self.y)
-    q[0] = self.u0(self.x, self.y) * self.h0(self.x, self.y)
-    
-    
-    if scheme == 'lf': # Lax-Friedichs scheme
-    
-      for n in range(self.Nt - 1):
-        h[n+1, 1:-1, 1:-1] = 0.5 * (h[n, 1:-1, 2:] + h[n, 1:-1, :-2] + h[n, 2:, 1:-1] + h[n, :-2, 1:-1]) \
-          - 0.5 * self.dt * ((q[n, 1:-1, 2:] - q[n, 1:-1, :-2]) / self.dx + (q[n, 2:, 1:-1] - q[n, :-2, 1:-1]) / self.dy)
-        q[n+1, 1:-1, 1:-1] = 0.5 * (q[n, 1:-1, 2:] + q[n, 1:-1, :-2] + q[n, 2:, 1:-1] + q[n, :-2, 1:-1]) \
-          - 0.5 * self.dt * ( 
-            (q[n, 1:-1, 2:] ** 2 / h[n, 1:-1, 2:] + self.g *  h[n, 1:-1, 2:] ** 2 / 2 - q[n, 1:-1, :-2] ** 2 / h[n, 1:-1, :-2] + self.g *  h[n, 1:-1, :-2] ** 2 / 2) / self.dx + \
-            (q[n, 2:, 1:-1] ** 2 / h[n, 2:, 1:-1] + self.g *  h[n, 2:, 1:-1] ** 2 / 2 - q[n, :-2, 1:-1] ** 2 / h[n, :-2, 1:-1] + self.g *  h[n, :-2, 1:-1] ** 2 / 2) / self.dy ) \
-          - self.dt * self.g * h[n, 1:-1, 1:-1] * self.Sf(self.f, self.g, h[n, 1:-1, 1:-1], q[n, 1:-1, 1:-1])
-          
-        # Boundary
-        h[n+1, :, 0] = h[n+1, :, 1]
-        h[n+1, :,-1] = h[n+1, :,-2]
-        q[n+1, :, 0] = q[n+1, :, 1]
-        q[n+1, :,-1] = q[n+1, :,-2]
-        
-        h[n+1, 0, :] = h[n+1, 1, :]
-        h[n+1,-1, :] = h[n+1,-2, :]
-        q[n+1, 0, :] = q[n+1, 1, :]
-        q[n+1,-1, :] = q[n+1,-2, :]
-
-    
-    return self.t, self.x, self.y, h, q

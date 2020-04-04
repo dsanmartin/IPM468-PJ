@@ -1,17 +1,50 @@
 import pathlib
 import numpy as np
 from dambreak import Experiment2D
-from plot import plot2D, plot3D, quiver
+from plot import quiver, plot2D, plot3D
 
-#%% Initial condition
-def h0_(x, y, x0, y0, h0):
-  H = np.zeros_like(x)
+#%%
+h0 = 40
+g = 1
+x0 = 1000
+c0 = np.sqrt(g * h0)
+
+xA = lambda t: -c0 * t + x0
+xB = lambda t: 2 * c0 * t + x0
+  
+
+def h_(x, t):
+  # Data to return
+  o = np.zeros_like(x)
+  # Cases 
+  # First case
+  idx_1 = np.array((x <= xA(t))) # Index where condition 1 is 
+  o[idx_1] = h0 
+  # Second case
+  idx_2 = np.array((x >= xA(t)) & (x <= xB(t)))
+  o[idx_2] = (-x[idx_2]/t[idx_2] + 2 * c0) ** 2 / (9 * g)
+  # Third case, just keep zeros
+  
+  return o
+
+  
+def u_(x, t):
+  o = np.ones_like(x) * 1e-16 
+  # Cases, first and third case just keep zeros
+  # Second case
+  idx = np.array(((x >= xA(t)) & (x <= xB(t))))
+  o[idx] = 2 / 3 * (x[idx] / t[idx] + c0)
+  
+  return o
+
+def h0_(x, y, x0, y0):
+  H = np.zeros_like(x) #* 0# 1e-16
   idx = np.array((x <= x0) & (y <= y0))
-  H[idx] = h0
+  H[idx] = 40
   return H
+  
+#%%
 
-#%%Parameters
-h_0 = 40
 x0 = 1000
 y0 = 1000
 L = 2000
@@ -19,30 +52,16 @@ T = 40
 Nx = 100
 Ny = 100
 Nt = 500
-f = 0
 g = 1
+f = 8 * g / (40 ** 2) #* 1000
 
-h0 = lambda x, y: h0_(x, y, x0, y0, h_0) # h IC
-h0g = lambda x, y: h_0*np.exp(-1e-5*((x-500)**2 + (y-500)**2))
-u0 = lambda x, y: x * 0 # u IC
-v0 = lambda x, y: y * 0 # v IC
-Sf = lambda f, g, h, Q: f * np.abs(Q) * Q / (8 * g * h ** 3) # Friction
+h0 = lambda x, y: h0_(x, y, x0, y0) 
+u0 = lambda x, y: x * 0
+v0 = lambda x, y: y * 0
+Sf = lambda f, g, h, Q: f * np.abs(Q) * Q / (8 * g * h ** 3)
 
-# #%%
-# x = np.linspace(0, L, Nx + 1)
-# y = np.linspace(0, L, Ny + 1)
-# X, Y = np.meshgrid(x, y)
-
-# #%%
-# import matplotlib.pyplot as plt
-# HH = h0g(X, Y)
-
-# plt.imshow(HH)
-# plt.colorbar()
-# plt.show()
-
-#%% Experiment 
-ritter = Experiment2D(
+#%%
+dressler = Experiment2D(
   f = f,
   g = g,
   L = L,
@@ -56,31 +75,22 @@ ritter = Experiment2D(
   Sf = Sf
 )
 
-#%% Lax-Friedrich scheme not working...
-t, Xl, Yl, Hl, Q1l, Q2l = ritter.solvePDE('lf')
-
-#%% Rusanov scheme
-t, Xr, Yr, Hr, Q1r, Q2r = ritter.solvePDE('rs')
-
 #%%
-n = 4
-plot3D(Xl, Yl, Hl[n])
+t, Xr, Yr, Hr, Q1r, Q2r = dressler.solvePDE('rs')
+#%%
+#plot2D(x, t, H[1])
+n = 300
+plot2D(Xr, Yr, Hr[n])
 
 #%%
 n = -1
 plot3D(Xr, Yr, Hr[n])
 
 #%%
-plot2D(Xr, Yr, Hr[n])
-
-#%%
-plot3D(Xr, Yr, Hr[n])
-
-#%%
 quiver(Xr, Yr, Q1r[n], Q2r[n])
 
 #%%Save data
-DIR = 'data/3/1/' # Directory name
+DIR = 'data/3/3/' # Directory name
 pathlib.Path(DIR).mkdir(parents=True, exist_ok=True) # Create Folder
 
 #%% Save experiment n = {0, 125, 250, 375, -1}
@@ -95,7 +105,7 @@ data_h[:, 4] = Hr[250].flatten()
 data_h[:, 5] = Hr[375].flatten()
 data_h[:, 6] = Hr[-1].flatten()
 
-np.savetxt(DIR + 'ritter_2D.csv', data_h, fmt='%.16f', delimiter=' ', header='x y h0 h10 h20 h30 h40', comments="") # Save data
+np.savetxt(DIR + 'dressler_2D.csv', data_h, fmt='%.16f', delimiter=' ', header='x y h0 h10 h20 h30 h40', comments="") # Save data
 
 #%%
 
@@ -121,14 +131,13 @@ data_v[:, 15] = Q2r[-1, ::nn, ::nn].flatten() / Hr[-1, ::nn, ::nn].flatten()
 data_v[:, 16] = np.sqrt(data_v[:, 14] ** 2 + data_v[:, 15] ** 2)
 
 header_ = 'x y u_0 v_0 m0 u_10 v_10 m10 u_20 v_20 m20 u_30 v_30 m30 u_40 v_40 m40'
-np.savetxt(DIR + 'ritter_v_2D.csv', data_v, fmt='%.16f', delimiter=' ', header=header_, comments="")
+np.savetxt(DIR + 'dressler_v_2D.csv', data_v, fmt='%.16f', delimiter=' ', header=header_, comments="")
 
-#%%
-MMM, NNN = Hl[0].shape
 
-data_lf = np.zeros((MMM * NNN, 3))
-data_lf[:, 0] = Xl.flatten()
-data_lf[:, 1] = Yl.flatten()
-data_lf[:, 2] = Hl[4].flatten()
 
-np.savetxt(DIR + "ritter_2D_lf.csv", data_lf, fmt='%.16f', delimiter=' ', header="x y h", comments="")
+
+
+
+
+
+

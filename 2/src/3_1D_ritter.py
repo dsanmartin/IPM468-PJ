@@ -60,7 +60,7 @@ HR = h(X, T)
 UR = u(X, T)
 
 #%% Initial condition
-plot1D(x, HR[0])
+plot1D(x, HR[-1])
 
 #%% Evolution
 plot2D(x, t, HR)

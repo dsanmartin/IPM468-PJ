@@ -23,6 +23,11 @@ def plot3D(x, y, z):
   #ax.set_zlim([0, np.max(z)+ 10])
   plt.show()
   
+def quiver(x, y, u, v):
+  plt.figure(figsize=(8, 8))
+  plt.quiver(x, y, u, v)
+  plt.show()
+  
 def compare(x, y1, y2, y3):
   plt.plot(x, y1, label="Solution")
   plt.plot(x, y2, label="Lax-Friedrichs")

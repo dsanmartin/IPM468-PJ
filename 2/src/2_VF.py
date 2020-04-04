@@ -1,22 +1,17 @@
 import pathlib
 import numpy as np
 from atmospheric import Experiment
-from plot import plot1D, plot2D, plot3D
+from plot import plot1D, plot2D, plot3D, quiver
   
-#%%
-def airy(x, t, H, k, w):
-  return .5 * H * np.cos(k * x - w * t)
-#%%
-# Initial conditions
+#%% Initial conditions
 h0 = lambda x, y, R, hp: 1 + hp * (np.sqrt((x - .5)**2 + (y - .5)**2) <= R) # Initial 
 u0 = lambda x, y: x * 0
-#h0g = lambda x, y: 1 + 0.11 * np.exp(-100*((x-.5)**2 + (y-.5)**2))
 v0 = lambda x, y: x * 0
 
-#%%
+#%% Parameters
 
 # Model parameters
-H_ = .1
+H_ = .5
 f_ = 0
 g_ = 1
 b_ = 2
@@ -47,74 +42,25 @@ exp = Experiment(
   tf = tf,
   bc = bc,
   h0 = lambda x, y: h0(x, y, .1, .1),
-  #h0 = h0g,
   u0 = u0,
   v0 = v0,
 )
 
-#%% QUESTION 2.1 - Experiments changing H value ###
-
-#%% Exp 1
-exp.H = .1
-t1, X1, Y1, H1, U1, V1 = exp.solvePDE()
+#%% QUESTION 2.1 ###
+t1, X1, Y1, H1, U1, V1 = exp.solveVF('rk4')
 
 #%% Plot exp 1
 plot1D(t1, H1[:, Ny//2, Nx//2])
 
-#%% Exp 2
-exp.H = .5
-t2, X2, Y2, H2, U2, V2 = exp.solvePDE()
-
-#%% Plot exp 2
-plot1D(t2, H2[:, Ny//2, Nx//2])
-
-#%% Exp 3
-exp.H = 1
-t3, X3, Y3, H3, U3, V3 = exp.solvePDE()
-
-#%% Plot exp 3
-plot1D(t3, H3[:, Ny//2, Nx//2])
-
-#%% Exp 4
-exp.H = 2
-t4, X4, Y4, H4, U4, V4 = exp.solvePDE()
-
-#%% Plot exp 1
-plot1D(t4, H4[:, Ny//2, Nx//2])
-
 #%%
-# for k in range(len(t1)):
-#   if k % 100 == 0: 
-k=-1
-plot2D(X1, Y1, H1[k])
+# n = 250
+for n in range(len(t1)):
+  if n % 100 == 0: 
+    print(n)
+    plot2D(X1, Y1, H1[n])
     
 #%%
-plot3D(X1, Y1, H1[40])
-
-#%%
-N = 500
-x = np.linspace(0, xf, N)
-t = np.linspace(0, tf, N)
-l = .475
-T = .115#1.055
-k = 2 * np.pi / l
-w = 2 * np.pi / T
-eta = 1 + airy(0.5, t, .2, k, w) 
-
-T2 = .05
-w2 = 2 * np.pi / T2
-eta2 = 1 + airy(0.5, t, .01, k, w2)
-
-#%%
-#plot1D(t, eta)
-import matplotlib.pyplot as plt
-plt.plot(t2, H2[:, Ny//2, Nx//2], label="Simulation")
-plt.plot(t, eta, label="Airy")
-plt.plot(t, eta2, label="Airy")
-plt.grid(True)
-plt.legend()
-plt.show()
-
+plot3D(X1, Y1, H1[n])
 
 #%% QUESTION 2.2 - Coriolis effect %%
 Om = 7.2921e-5 # Angular speed
@@ -122,39 +68,11 @@ phi = -33.036 * np.pi / 180 # Valparaiso Latitude
 f1 = 2 * Om * np.sin(phi)
 exp.H = .5 # Selected H
 #%% Simulation
-exp.f = f1 / 1e3
-tf1, Xf1, Yf1, Hf1, Uf1, Vf1 = exp.solvePDE()
-
-#%% Simulation
-exp.f = f1 / 1e2 
-tf2, Xf2, Yf2, Hf2, Uf2, Vf2 = exp.solvePDE()
-
-#%% Simulation
-exp.f = f1 / 1e1
-tf3, Xf3, Yf3, Hf3, Uf3, Vf3 = exp.solvePDE()
-
-#%% Simulation
-exp.f = f1 * 1e1
-tf4, Xf4, Yf4, Hf4, Uf4, Vf4 = exp.solvePDE()
-
-#%% Simulation
-exp.f = f1 * 1e2 
-tf5, Xf5, Yf5, Hf5, Uf5, Vf5 = exp.solvePDE()
-
-#%% Simulation
-exp.f = f1 * 1e3 
-tf6, Xf6, Yf6, Hf6, Uf6, Vf6 = exp.solvePDE()
-
-#%% f working....
-exp.f = f1 * 1e5 
-tf7, Xf7, Yf7, Hf7, Uf7, Vf7 = exp.solvePDE()
+exp.f = f1 * 1e4
+tf1, Xf1, Yf1, Hf1, Uf1, Vf1 = exp.solveVF()
 
 #%%
-exp.f = f1 * 1e6
-tf8, Xf8, Yf8, Hf8, Uf8, Vf8 = exp.solvePDE()
-
-#%%
-plot1D(tf1, Hf7[:, Ny//2, Nx//2])
+plot1D(tf1, Hf1[:, Ny//2, Nx//2])
 
 #%%
 #n = -1
@@ -162,14 +80,13 @@ plot1D(tf1, Hf7[:, Ny//2, Nx//2])
 for n in range(Nt):
   if n % 50 == 0:
     print(n)
-    plot2D(Xf1, Yf1, Hf7[n])
+    plot2D(Xf1, Yf1, Hf1[n])
 
 #%%
 for n in range(Nt):
   if n % 50 == 0:
     print(n)
-    plt.quiver(Xf1, Yf1, Uf7[n], Vf7[n])
-    plt.show()
+    quiver(Xf1, Yf1, Uf1[n], Vf1[n])
 
 #%% Save data for plots question 1
 DIR = 'data/2/1/' # Directory name

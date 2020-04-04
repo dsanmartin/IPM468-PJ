@@ -33,7 +33,6 @@ class Experiment:
     
     
     self.bc = kwargs['bc']
-    
 
 
   def F(self, t, y):
@@ -141,3 +140,150 @@ class Experiment:
     
     # Return domain and approximations
     return self.t, X, Y, H, U, V
+  
+  
+  
+  ### Finite volume ###
+  def FF(self, U):
+    h, u, v = U
+    return np.array([self.H * u, self.g * h, v * 0])
+  
+  def GG(self, U):
+    h, u, v = U
+    return np.array([self.H * v, u * 0, self.g * h])
+  
+  
+  # Lax-Friedrichs
+  def LFF(self, Ul, Ur):
+    c = self.dx / self.dt
+    return 0.5 * (self.FF(Ul) + self.FF(Ur)) - 0.5 * c * (Ur - Ul)
+  
+  def LFG(self, Ub, Uu):
+    c = self.dy / self.dt
+    return 0.5 * (self.GG(Ub) + self.GG(Uu)) - 0.5 * c * (Uu - Ub)
+  
+  #Rusanov
+  def ev(self):
+    l1 = np.sqrt(self.H * self.g)
+    l2 = 0
+    l3 = -np.sqrt(self.H * self.g)
+    return l1, l2, l3
+
+  # 
+  def RSF(self, Ul, Ur):
+    c = np.max(self.ev())
+    return 0.5 * (self.FF(Ul) + self.FF(Ur)) - 0.5 * c * (Ur - Ul)
+
+  def RSG(self, Ub, Uu):
+    c = np.max(self.ev())
+    return 0.5 * (self.GG(Ub) + self.GG(Uu)) - 0.5 * c * (Uu - Ub)
+  
+  # Fluxes computation  
+  def Fx(self, U):
+    h, u, v = U
+    Ul = np.array([h[1:-1, :-2], u[1:-1, :-2], v[1:-1, :-2]]) 
+    Uc = np.array([h[1:-1, 1:-1], u[1:-1, 1:-1], v[1:-1, 1:-1]])
+    Ur = np.array([h[1:-1, 2:], u[1:-1, 2:], v[1:-1, 2:]]) 
+    
+    #return (self.LFF(Uc, Ur) - self.LFF(Ul, Uc)) / self.dx
+    return (self.RSF(Uc, Ur) - self.RSF(Ul, Uc)) / self.dx
+  
+  def Gy(self, U):
+    h, u, v = U
+    Ub = np.array([h[:-2, 1:-1], u[:-2, 1:-1], v[:-2, 1:-1]])
+    Uc = np.array([h[1:-1, 1:-1], u[1:-1, 1:-1], v[1:-1, 1:-1]])
+    Uu = np.array([h[2:, 1:-1], u[2:, 1:-1], v[2:, 1:-1]])
+    
+    #return (self.LFG(Uc, Uu) - self.LFG(Ub, Uc)) / self.dy
+    return (self.RSG(Uc, Uu) - self.RSG(Ub, Uc)) / self.dy
+    
+  def S(self, U):
+    h, u, v = U
+    return np.array([h * 0, self.f * v - self.b * u, -self.f * u - self.b * v])
+  
+  def BC(self, U):
+      # h
+      U[0, :, 0] = U[0, :, 1]; U[0, :, -1] = U[0, :, -2]
+      U[0, 0, :] = U[0, 1, :]; U[0, -1, :] = U[0, -2, :]
+      
+      # u
+      U[1, :, 0] = U[1, :, 1]; U[1, :, -1] = U[1, :, -2]
+      U[1, 0, :] = U[1, 1, :]; U[1, -1, :] = U[1, -2, :]
+      
+      # v
+      U[2, :, 0] = U[2, :, 1]; U[2, :, -1] = U[2, :, -2]
+      U[2, 0, :] = U[2, 1, :]; U[2, -1, :] = U[2, -2, :]
+
+      
+  def FFF(self, t, U):
+    return -(self.Fx(U) + self.Gy(U))
+  
+  def euler(self, U0):
+    U = np.zeros((self.Nt, 3, self.Ny, self.Nx))
+    U[0] = U0
+    
+    for n in range(self.Nt - 1):
+      U[n+1, :, 1:-1, 1:-1] = U[n, :, 1:-1, 1:-1] + self.dt * self.FFF(self.t[n], U[n, :]) # Conservative
+      
+      U[n+1, :] += self.dt * self.S(U[n+1, :]) # Splitting
+      
+      self.BC(U[n+1]) # Boundary conditions
+      
+    return U
+  
+  def RK4VF(self, U0):
+    U = np.zeros((self.Nt, 3, self.Ny, self.Nx))
+    U[0] = U0
+    dt = self.dt
+    k1 = np.zeros((3, self.Ny, self.Nx))
+    k2 = np.zeros_like(k1)
+    k3 = np.zeros_like(k1)
+    k4 = np.zeros_like(k1)
+    
+    for n in range(self.Nt - 1):
+      k1[:, 1:-1, 1:-1] = self.FFF(self.t[n], U[n, :])
+      k2[:, 1:-1, 1:-1] = self.FFF(self.t[n] + 0.5 * dt, U[n, :] + 0.5 * dt * k1)
+      k3[:, 1:-1, 1:-1] = self.FFF(self.t[n] + 0.5 * dt, U[n, :] + 0.5 * dt * k2)
+      k4[:, 1:-1, 1:-1] = self.FFF(self.t[n] + dt, U[n, :] + dt * k3)
+      U[n+1, :, 1:-1, 1:-1] = U[n, :, 1:-1, 1:-1] + \
+        (1/6) * dt * (k1[:, 1:-1, 1:-1] + 2 * k2[:, 1:-1, 1:-1] + 2 * k3[:, 1:-1, 1:-1] + k4[:, 1:-1, 1:-1])
+      
+      U[n+1, :] += self.dt * self.S(U[n+1, :]) # Splitting
+      
+      self.BC(U[n+1]) # Boundary conditions
+  
+    return U 
+    
+  
+
+  def solveVF(self, method='euler'):
+    # Domain grid
+    X, Y = np.meshgrid(self.x, self.y)
+    
+    # Initial conditions    
+    U0 = np.array([
+      self.h0(X, Y),
+      self.u0(X, Y),
+      self.v0(X, Y)
+    ])
+    
+    if method == 'euler':
+      solver = self.euler
+    elif method == 'rk4':
+      solver = self.RK4VF
+    
+    # Solve
+    U = solver(U0)
+      
+    return self.t, X, Y, U[:, 0], U[:, 1], U[:, 2]
+      
+      
+    
+    
+    
+    
+    
+    
+    
+    
+    

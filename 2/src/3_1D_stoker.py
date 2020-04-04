@@ -10,10 +10,12 @@ def h_(x, t, h0, hm, hd, x0, g, c0, xA, xB, xC):
   o = np.zeros_like(x)
   # Cases 
   # First case
-  idx_1 = np.array((x <= xA(t))) # Index where condition 1 is 
+  idx_1 = np.array((x < xA(t))) # Index where condition 1 is 
   o[idx_1] = h0
   # Second case
-  idx_2 = np.array((x > xA(t)) & (x <= xB(t)))
+  idx_2 = np.array((x >= xA(t)) & (x <= xB(t)))
+  idx2 = np.array((t == 0)) # indexes where t == 0
+  t[idx2] = 1
   o[idx_2] = (-(x[idx_2]-x0)/t[idx_2] + 2 * c0) ** 2 / (9 * g)
   # Third case
   idx_3 = np.array((x > xB(t)) & (x <= xC(t)))
@@ -36,7 +38,9 @@ def u_(x, t, x0, c0, cm, xA, xB, xC):
   # Third case
   idx3 = np.array((x > xB(t)) & (x <= xC(t)))
   o[idx3] = 2 * (c0 - cm)
-  o[idx2] = 0
+  # Fourth case
+  idx_4 = np.array((x > xC(t)))
+  o[idx_4] = 0
   
   return o
 
@@ -48,7 +52,7 @@ xC_ = lambda t, vc, x0: x0 + vc * t
 # Parameters
 h_0 = 40
 h_m = 18
-h_d = 10
+h_d = 1
 g = 1
 x_0 = 1000
 c_0 = np.sqrt(g * h_0)
@@ -89,7 +93,7 @@ plot2D(x, t, HS)
 plot3D(X, T, HS)
 
 #%% Initial condition
-plot1D(x, US[0])
+plot1D(x, US[-1])
 
 #%% Evolution
 plot2D(x, t, US)
@@ -99,7 +103,7 @@ plot3D(X, T, US)
 
 #%% Numerical Stoker
 h_0 = 40
-h_d = 10
+h_d = 1
 x_0 = 1000
 L = 2000
 T = 40 # 1
