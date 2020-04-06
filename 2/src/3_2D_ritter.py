@@ -23,23 +23,9 @@ f = 0
 g = 1
 
 h0 = lambda x, y: h0_(x, y, x0, y0, h_0) # h IC
-h0g = lambda x, y: h_0*np.exp(-1e-5*((x-500)**2 + (y-500)**2))
 u0 = lambda x, y: x * 0 # u IC
 v0 = lambda x, y: y * 0 # v IC
 Sf = lambda f, g, h, Q: f * np.abs(Q) * Q / (8 * g * h ** 3) # Friction
-
-# #%%
-# x = np.linspace(0, L, Nx + 1)
-# y = np.linspace(0, L, Ny + 1)
-# X, Y = np.meshgrid(x, y)
-
-# #%%
-# import matplotlib.pyplot as plt
-# HH = h0g(X, Y)
-
-# plt.imshow(HH)
-# plt.colorbar()
-# plt.show()
 
 #%% Experiment 
 ritter = Experiment2D(

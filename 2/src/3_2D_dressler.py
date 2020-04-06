@@ -4,47 +4,14 @@ from dambreak import Experiment2D
 from plot import quiver, plot2D, plot3D
 
 #%%
-h0 = 40
-g = 1
-x0 = 1000
-c0 = np.sqrt(g * h0)
-
-xA = lambda t: -c0 * t + x0
-xB = lambda t: 2 * c0 * t + x0
-  
-
-def h_(x, t):
-  # Data to return
-  o = np.zeros_like(x)
-  # Cases 
-  # First case
-  idx_1 = np.array((x <= xA(t))) # Index where condition 1 is 
-  o[idx_1] = h0 
-  # Second case
-  idx_2 = np.array((x >= xA(t)) & (x <= xB(t)))
-  o[idx_2] = (-x[idx_2]/t[idx_2] + 2 * c0) ** 2 / (9 * g)
-  # Third case, just keep zeros
-  
-  return o
-
-  
-def u_(x, t):
-  o = np.ones_like(x) * 1e-16 
-  # Cases, first and third case just keep zeros
-  # Second case
-  idx = np.array(((x >= xA(t)) & (x <= xB(t))))
-  o[idx] = 2 / 3 * (x[idx] / t[idx] + c0)
-  
-  return o
-
-def h0_(x, y, x0, y0):
+def h0_(x, y, x0, y0, h0):
   H = np.zeros_like(x) #* 0# 1e-16
   idx = np.array((x <= x0) & (y <= y0))
-  H[idx] = 40
+  H[idx] = h0
   return H
   
 #%%
-
+h_0 = 40
 x0 = 1000
 y0 = 1000
 L = 2000
@@ -53,9 +20,9 @@ Nx = 100
 Ny = 100
 Nt = 500
 g = 1
-f = 8 * g / (40 ** 2) #* 1000
+f = 8 * g / (40 ** 2)
 
-h0 = lambda x, y: h0_(x, y, x0, y0) 
+h0 = lambda x, y: h0_(x, y, x0, y0, h_0) 
 u0 = lambda x, y: x * 0
 v0 = lambda x, y: y * 0
 Sf = lambda f, g, h, Q: f * np.abs(Q) * Q / (8 * g * h ** 3)
@@ -75,11 +42,19 @@ dressler = Experiment2D(
   Sf = Sf
 )
 
+#%% Lax-Friedrich scheme not working...
+t, Xl, Yl, Hl, Q1l, Q2l = dressler.solvePDE('lf')
+
 #%%
 t, Xr, Yr, Hr, Q1r, Q2r = dressler.solvePDE('rs')
+
+#%%
+n = 5
+plot3D(Xl, Yl, Hl[n])
+
 #%%
 #plot2D(x, t, H[1])
-n = 300
+n = -1
 plot2D(Xr, Yr, Hr[n])
 
 #%%
@@ -132,6 +107,16 @@ data_v[:, 16] = np.sqrt(data_v[:, 14] ** 2 + data_v[:, 15] ** 2)
 
 header_ = 'x y u_0 v_0 m0 u_10 v_10 m10 u_20 v_20 m20 u_30 v_30 m30 u_40 v_40 m40'
 np.savetxt(DIR + 'dressler_v_2D.csv', data_v, fmt='%.16f', delimiter=' ', header=header_, comments="")
+
+#%%
+MMM, NNN = Hl[0].shape
+
+data_lf = np.zeros((MMM * NNN, 3))
+data_lf[:, 0] = Xl.flatten()
+data_lf[:, 1] = Yl.flatten()
+data_lf[:, 2] = Hl[4].flatten()
+
+np.savetxt(DIR + "dressler_2D_lf.csv", data_lf, fmt='%.16f', delimiter=' ', header="x y h", comments="")
 
 
 

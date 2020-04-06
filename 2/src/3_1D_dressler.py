@@ -1,7 +1,7 @@
 import pathlib
 import numpy as np
 from dambreak import Experiment1D
-from plot import plot1D, plot2D, plot3D#, compare
+from plot import plot1D, plot2D, plot3D, compare
 
 #%%
 def h_(x, t, h0, x0, g, c0, xA, xB):
@@ -137,15 +137,15 @@ plot3D(XRS, TRS, Hr[::10,:])
 
 
 #%%
-# print("h(x,t)")
-# compare(xl, HD[-1], Hl[-1], Hr[-1])
-# print("Error Lax-Friedrichs: ", np.linalg.norm(HD[-1] - Hl[-1]))
-# print("Error Rusanov: ", np.linalg.norm(HD[-1] - Hr[-1]))
+print("h(x,t)")
+compare(xl, HD[-1], Hl[-1], Hr[-1])
+print("Error Lax-Friedrichs: ", np.linalg.norm(HD[-1] - Hl[-1]))
+print("Error Rusanov: ", np.linalg.norm(HD[-1] - Hr[-1]))
 
-# print("u(x,t)")
-# compare(xl, UD[-1], Ql[-1] / Hl[-1], Qr[-1] / Hr[-1])
-# print("Error Lax-Friedrichs: ", np.linalg.norm(UD[-1] - Ql[-1] / Hl[-1]))
-# print("Error Rusanov: ", np.linalg.norm(UD[-1] - Qr[-1] / Hr[-1]))
+print("u(x,t)")
+compare(xl, UD[-1], Ql[-1] / Hl[-1], Qr[-1] / Hr[-1])
+print("Error Lax-Friedrichs: ", np.linalg.norm(UD[-1] - Ql[-1] / Hl[-1]))
+print("Error Rusanov: ", np.linalg.norm(UD[-1] - Qr[-1] / Hr[-1]))
 
 #%%
 # Different f experiments

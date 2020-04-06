@@ -47,40 +47,43 @@ exp = Experiment(
 )
 
 #%% QUESTION 2.1 ###
-t1, X1, Y1, H1, U1, V1 = exp.solveVF('rk4')
+tr, Xr, Yr, Hr, Ur, Vr = exp.solveVF('rk4')
 
 #%% Plot exp 1
-plot1D(t1, H1[:, Ny//2, Nx//2])
+plot1D(tr, Hr[:, Ny//2, Nx//2])
 
 #%%
-# n = 250
-for n in range(len(t1)):
-  if n % 100 == 0: 
-    print(n)
-    plot2D(X1, Y1, H1[n])
+n = 250
+# for n in range(len(tr)):
+#   if n % 100 == 0: 
+#     print(n)
+plot2D(Xr, Yr, Hr[n])
     
 #%%
-plot3D(X1, Y1, H1[n])
+plot3D(Xr, Yr, Hr[n])
 
-#%% QUESTION 2.2 - Coriolis effect %%
+#%%
+quiver(Xr, Yr, Ur[125], Vr[125])
+
+  #%% QUESTION 2.2 - Coriolis effect %%
 Om = 7.2921e-5 # Angular speed
 phi = -33.036 * np.pi / 180 # Valparaiso Latitude
 f1 = 2 * Om * np.sin(phi)
 exp.H = .5 # Selected H
 #%% Simulation
-exp.f = f1 * 1e4
-tf1, Xf1, Yf1, Hf1, Uf1, Vf1 = exp.solveVF()
+exp.f = f1 * 1e5
+tf1, Xf1, Yf1, Hf1, Uf1, Vf1 = exp.solveVF('rk4')
 
 #%%
 plot1D(tf1, Hf1[:, Ny//2, Nx//2])
-
+  
 #%%
 #n = -1
 #XX,  = np.meshgrid(Xf1[0], tf1)
 for n in range(Nt):
   if n % 50 == 0:
     print(n)
-    plot2D(Xf1, Yf1, Hf1[n])
+    plot3D(Xf1, Yf1, Hf1[n])
 
 #%%
 for n in range(Nt):
@@ -91,169 +94,102 @@ for n in range(Nt):
 #%% Save data for plots question 1
 DIR = 'data/2/1/' # Directory name
 pathlib.Path(DIR).mkdir(parents=True, exist_ok=True) # Create Folder
-#%% Generate data
-data1 = np.zeros((Nt + 1, 2))
-data2 = np.zeros((Nt + 1, 2))
-data3 = np.zeros((Nt + 1, 2))
-data4 = np.zeros((Nt + 1, 2))
-data1[:,0] = t1
-data1[:,1] = H1[:, Ny // 2, Nx // 2].flatten()
-data2[:,0] = t2
-data2[:,1] = H2[:, Ny // 2, Nx // 2].flatten()
-data3[:,0] = t3
-data3[:,1] = H3[:, Ny // 2, Nx // 2].flatten()
-data4[:,0] = t4
-data4[:,1] = H4[:, Ny // 2, Nx // 2].flatten()
+#%%
+data_t = np.zeros((Nt + 1, 2))
+data_t[:,0] = tr
+data_t[:,1] = Hr[:, Ny // 2, Nx // 2]
 
-#%% H experiment
-np.savetxt(DIR + 'h1.csv', data1, fmt='%.16f', delimiter=',', header='t,h', comments="") # Save data
-np.savetxt(DIR + 'h2.csv', data2, fmt='%.16f', delimiter=',', header='t,h', comments="") # Save data
-np.savetxt(DIR + 'h3.csv', data3, fmt='%.16f', delimiter=',', header='t,h', comments="") # Save data
-np.savetxt(DIR + 'h4.csv', data4, fmt='%.16f', delimiter=',', header='t,h', comments="") # Save data
+np.savetxt(DIR + 'ht_vf.csv', data_t, fmt='%.16f', delimiter=',', header='t,h', comments="") # Save data
 
-#%% Save simulation
+#%% Save experiment n = {0, 125, 250, 375, -1}
+M, N = Hr[0].shape
 
-M, N = X1.shape
-sim_t0 = np.zeros((M * N, 5))
-sim_t1 = np.zeros((M * N, 5))
-sim_t2 = np.zeros((M * N, 5))
-sim_t3 = np.zeros((M * N, 5))
-sim_t4 = np.zeros((M * N, 5))
+data_h = np.zeros((M * N, 7))
+data_h[:, 0] = Xr.flatten()
+data_h[:, 1] = Yr.flatten()
+data_h[:, 2] = Hr[0].flatten()
+data_h[:, 3] = Hr[125].flatten()
+data_h[:, 4] = Hr[250].flatten()
+data_h[:, 5] = Hr[375].flatten()
+data_h[:, 6] = Hr[-1].flatten()
 
-sim_t0[:, 0] = X2.flatten(); sim_t0[:, 1] = Y2.flatten(); sim_t0[:, 2] = H2[  0].flatten(); sim_t0[:, 3] = U2[  0].flatten(); sim_t0[:, 4] = V2[  0].flatten()
-sim_t1[:, 0] = X2.flatten(); sim_t1[:, 1] = Y2.flatten(); sim_t1[:, 2] = H2[125].flatten(); sim_t0[:, 3] = U2[125].flatten(); sim_t0[:, 4] = V2[125].flatten()
-sim_t2[:, 0] = X2.flatten(); sim_t2[:, 1] = Y2.flatten(); sim_t2[:, 2] = H2[250].flatten(); sim_t0[:, 3] = U2[250].flatten(); sim_t0[:, 4] = V2[250].flatten()
-sim_t3[:, 0] = X2.flatten(); sim_t3[:, 1] = Y2.flatten(); sim_t3[:, 2] = H2[375].flatten(); sim_t0[:, 3] = U2[375].flatten(); sim_t0[:, 4] = V2[375].flatten()
-sim_t4[:, 0] = X2.flatten(); sim_t4[:, 1] = Y2.flatten(); sim_t4[:, 2] = H2[ -1].flatten(); sim_t0[:, 3] = U2[ -1].flatten(); sim_t0[:, 4] = V2[ -1].flatten()
+np.savetxt(DIR + 'sv_2D_vf.csv', data_h, fmt='%.16f', delimiter=' ', header='x y h0 h10 h20 h30 h40', comments="") # Save data
 
-np.savetxt(DIR + 'sim_t0.csv', sim_t0, fmt='%.16f', delimiter=',', header='x,y,h,u,v', comments="") # Save data
-np.savetxt(DIR + 'sim_t1.csv', sim_t1, fmt='%.16f', delimiter=',', header='x,y,h,u,v', comments="") # Save data
-np.savetxt(DIR + 'sim_t2.csv', sim_t2, fmt='%.16f', delimiter=',', header='x,y,h,u,v', comments="") # Save data
-np.savetxt(DIR + 'sim_t3.csv', sim_t3, fmt='%.16f', delimiter=',', header='x,y,h,u,v', comments="") # Save data
-np.savetxt(DIR + 'sim_t4.csv', sim_t4, fmt='%.16f', delimiter=',', header='x,y,h,u,v', comments="") # Save data
+#%%
+
+nn = 3
+MM, NN = Ur[0, ::nn, ::nn].shape
+data_v = np.zeros((MM * NN, 17))
+data_v[:, 0] = Xr[::nn, ::nn].flatten()
+data_v[:, 1] = Yr[::nn, ::nn].flatten()
+data_v[:, 2] = Ur[0, ::nn, ::nn].flatten() #/ Hr[0, ::nn, ::nn].flatten()
+data_v[:, 3] = Vr[0, ::nn, ::nn].flatten() #/ Hr[0, ::nn, ::nn].flatten()
+data_v[:, 4] = np.sqrt(data_v[:, 2] ** 2 + data_v[:, 3] ** 2)
+data_v[:, 5] = Ur[125, ::nn, ::nn].flatten() #/ Hr[125, ::nn, ::nn].flatten()
+data_v[:, 6] = Vr[125, ::nn, ::nn].flatten() #/ Hr[125, ::nn, ::nn].flatten()
+data_v[:, 7] = np.sqrt(data_v[:, 5] ** 2 + data_v[:, 6] ** 2)
+data_v[:, 8] = Ur[250, ::nn, ::nn].flatten() #/ Hr[250, ::nn, ::nn].flatten()
+data_v[:, 9] = Vr[250, ::nn, ::nn].flatten() #/ Hr[250, ::nn, ::nn].flatten()
+data_v[:, 10] = np.sqrt(data_v[:, 8] ** 2 + data_v[:, 9] ** 2)
+data_v[:, 11] = Ur[375, ::nn, ::nn].flatten() #/ Hr[375, ::nn, ::nn].flatten()
+data_v[:, 12] = Vr[375, ::nn, ::nn].flatten() #/ Hr[375, ::nn, ::nn].flatten()
+data_v[:, 13] = np.sqrt(data_v[:, 11] ** 2 + data_v[:, 12] ** 2)
+data_v[:, 14] = Ur[-1, ::nn, ::nn].flatten() #/ Hr[-1, ::nn, ::nn].flatten()
+data_v[:, 15] = Vr[-1, ::nn, ::nn].flatten() #/ Hr[-1, ::nn, ::nn].flatten()
+data_v[:, 16] = np.sqrt(data_v[:, 14] ** 2 + data_v[:, 15] ** 2)
+
+header_ = 'x y u_0 v_0 m0 u_10 v_10 m10 u_20 v_20 m20 u_30 v_30 m30 u_40 v_40 m40'
+np.savetxt(DIR + 'sv_v_2D_vf.csv', data_v, fmt='%.16f', delimiter=' ', header=header_, comments="")
 
 
 #%%
 DIR2 = 'data/2/2/' # Directory name
 pathlib.Path(DIR2).mkdir(parents=True, exist_ok=True) # Create Folder
-#%% Experiments f1
-cor = np.zeros((len(tf1), 9))
-cor[:,0] = tf1
-cor[:,1] = Hf1[:, Ny//2, Nx//2]
-cor[:,2] = Hf2[:, Ny//2, Nx//2]
-cor[:,3] = Hf3[:, Ny//2, Nx//2]
-cor[:,4] = Hf4[:, Ny//2, Nx//2]
-cor[:,5] = Hf5[:, Ny//2, Nx//2]
-cor[:,6] = Hf6[:, Ny//2, Nx//2]
-cor[:,7] = Hf7[:, Ny//2, Nx//2]
-cor[:,8] = Hf8[:, Ny//2, Nx//2]
+#%%
+data_tc = np.zeros((Nt + 1, 2))
+data_tc[:,0] = tf1
+data_tc[:,1] = Hf1[:, Ny // 2, Nx // 2]
 
-np.savetxt(DIR2 + 'coriolis.csv', cor, fmt='%.16f', delimiter=' ', header='t f1 f2 f3 f4 f5 f6 f7 f8', comments="") # Save data
-
-#%% Save experiment complete for f8
-
-M, N = Xf7.shape
-sim_f_t0 = np.zeros((M * N, 5))
-sim_f_t1 = np.zeros((M * N, 5))
-sim_f_t2 = np.zeros((M * N, 5))
-sim_f_t3 = np.zeros((M * N, 5))
-sim_f_t4 = np.zeros((M * N, 5))
-
-sim_f_t0[:, 0] = Xf7.flatten(); sim_f_t0[:, 1] = Yf7.flatten(); sim_f_t0[:, 2] = Hf7[  0].flatten(); sim_f_t0[:, 3] = Uf7[  0].flatten(); sim_f_t0[:, 4] = Vf7[  0].flatten()
-sim_f_t1[:, 0] = Xf7.flatten(); sim_f_t1[:, 1] = Yf7.flatten(); sim_f_t1[:, 2] = Hf7[125].flatten(); sim_f_t0[:, 3] = Uf7[125].flatten(); sim_f_t0[:, 4] = Vf7[125].flatten()
-sim_f_t2[:, 0] = Xf7.flatten(); sim_f_t2[:, 1] = Yf7.flatten(); sim_f_t2[:, 2] = Hf7[250].flatten(); sim_f_t0[:, 3] = Uf7[250].flatten(); sim_f_t0[:, 4] = Vf7[250].flatten()
-sim_f_t3[:, 0] = Xf7.flatten(); sim_f_t3[:, 1] = Yf7.flatten(); sim_f_t3[:, 2] = Hf7[375].flatten(); sim_f_t0[:, 3] = Uf7[375].flatten(); sim_f_t0[:, 4] = Vf7[375].flatten()
-sim_f_t4[:, 0] = Xf7.flatten(); sim_f_t4[:, 1] = Yf7.flatten(); sim_f_t4[:, 2] = Hf7[ -1].flatten(); sim_f_t0[:, 3] = Uf7[ -1].flatten(); sim_f_t0[:, 4] = Vf7[ -1].flatten()
-
-np.savetxt(DIR2 + 'sim_f_t0.csv', sim_f_t0, fmt='%.16f', delimiter=' ', header='x y h u v', comments="") # Save data
-np.savetxt(DIR2 + 'sim_f_t1.csv', sim_f_t1, fmt='%.16f', delimiter=' ', header='x y h u v', comments="") # Save data
-np.savetxt(DIR2 + 'sim_f_t2.csv', sim_f_t2, fmt='%.16f', delimiter=' ', header='x y h u v', comments="") # Save data
-np.savetxt(DIR2 + 'sim_f_t3.csv', sim_f_t3, fmt='%.16f', delimiter=' ', header='x y h u v', comments="") # Save data
-np.savetxt(DIR2 + 'sim_f_t4.csv', sim_f_t4, fmt='%.16f', delimiter=' ', header='x y h u v', comments="") # Save data
+np.savetxt(DIR2 + 'ht_c_vf.csv', data_tc, fmt='%.16f', delimiter=',', header='t,h', comments="") # Save data
 
 
+#%% Save experiment n = {0, 125, 250, 375, -1}
+M, N = Hf1[0].shape
+
+data_hf = np.zeros((M * N, 7))
+data_hf[:, 0] = Xf1.flatten()
+data_hf[:, 1] = Yf1.flatten()
+data_hf[:, 2] = Hf1[0].flatten()
+data_hf[:, 3] = Hf1[125].flatten()
+data_hf[:, 4] = Hf1[250].flatten()
+data_hf[:, 5] = Hf1[375].flatten()
+data_hf[:, 6] = Hf1[-1].flatten()
+
+np.savetxt(DIR2 + 'sv_c_2D_vf.csv', data_hf, fmt='%.16f', delimiter=' ', header='x y h0 h10 h20 h30 h40', comments="") # Save data
 
 #%%
-nn=3
-MM, NN = Xf7[::nn,::nn].shape 
-# test = np.zeros((MM*NN, 5))
-# kk = -1
-# test[:,0] = X2[::nn,::nn].flatten()
-# test[:,1] = Y2[::nn,::nn].flatten()
-# test[:,2] = U2[kk,::nn,::nn].flatten()
-# test[:,3] = V2[kk,::nn,::nn].flatten()
-# test[:,4] = np.sqrt(test[:,2]**2 + test[:,3]**2)
 
-# np.savetxt(DIR + 'test4.csv', test, fmt='%.16f', delimiter=' ', header='x y u v m', comments="") # Save data
+nn = 3
+MM, NN = Uf1[0, ::nn, ::nn].shape
+data_vf = np.zeros((MM * NN, 17))
+data_vf[:, 0] = Xf1[::nn, ::nn].flatten()
+data_vf[:, 1] = Yf1[::nn, ::nn].flatten()
+data_vf[:, 2] = Uf1[0, ::nn, ::nn].flatten() #/ Hr[0, ::nn, ::nn].flatten()
+data_vf[:, 3] = Vf1[0, ::nn, ::nn].flatten() #/ Hr[0, ::nn, ::nn].flatten()
+data_vf[:, 4] = np.sqrt(data_vf[:, 2] ** 2 + data_vf[:, 3] ** 2)
+data_vf[:, 5] = Uf1[125, ::nn, ::nn].flatten() #/ Hr[125, ::nn, ::nn].flatten()
+data_vf[:, 6] = Vf1[125, ::nn, ::nn].flatten() #/ Hr[125, ::nn, ::nn].flatten()
+data_vf[:, 7] = np.sqrt(data_vf[:, 5] ** 2 + data_vf[:, 6] ** 2)
+data_vf[:, 8] = Uf1[250, ::nn, ::nn].flatten() #/ Hr[250, ::nn, ::nn].flatten()
+data_vf[:, 9] = Vf1[250, ::nn, ::nn].flatten() #/ Hr[250, ::nn, ::nn].flatten()
+data_vf[:, 10] = np.sqrt(data_vf[:, 8] ** 2 + data_vf[:, 9] ** 2)
+data_vf[:, 11] = Uf1[375, ::nn, ::nn].flatten() #/ Hr[375, ::nn, ::nn].flatten()
+data_vf[:, 12] = Vf1[375, ::nn, ::nn].flatten() #/ Hr[375, ::nn, ::nn].flatten()
+data_vf[:, 13] = np.sqrt(data_vf[:, 11] ** 2 + data_vf[:, 12] ** 2)
+data_vf[:, 14] = Uf1[-1, ::nn, ::nn].flatten() #/ Hr[-1, ::nn, ::nn].flatten()
+data_vf[:, 15] = Vf1[-1, ::nn, ::nn].flatten() #/ Hr[-1, ::nn, ::nn].flatten()
+data_vf[:, 16] = np.sqrt(data_vf[:, 14] ** 2 + data_vf[:, 15] ** 2)
 
-M, N = Xf7.shape
-sim_q_t0 = np.zeros((MM * NN, 5))
-sim_q_t1 = np.zeros((MM * NN, 5))
-sim_q_t2 = np.zeros((MM * NN, 5))
-sim_q_t3 = np.zeros((MM * NN, 5))
-sim_q_t4 = np.zeros((MM * NN, 5))
-
-sim_q_t0[:, 0] = Xf7[::nn,::nn].flatten(); sim_q_t0[:, 1] = Yf7[::nn,::nn].flatten(); sim_q_t0[:, 2] = Uf7[  0,::nn,::nn].flatten(); sim_q_t0[:, 3] = Vf7[  0,::nn,::nn].flatten(); sim_q_t0[:, 4] = np.sqrt(sim_q_t0[:, 2]**2 + sim_q_t0[:, 3]**2)
-sim_q_t1[:, 0] = Xf7[::nn,::nn].flatten(); sim_q_t1[:, 1] = Yf7[::nn,::nn].flatten(); sim_q_t1[:, 2] = Uf7[125,::nn,::nn].flatten(); sim_q_t1[:, 3] = Vf7[125,::nn,::nn].flatten(); sim_q_t1[:, 4] = np.sqrt(sim_q_t1[:, 2]**2 + sim_q_t1[:, 3]**2)
-sim_q_t2[:, 0] = Xf7[::nn,::nn].flatten(); sim_q_t2[:, 1] = Yf7[::nn,::nn].flatten(); sim_q_t2[:, 2] = Uf7[250,::nn,::nn].flatten(); sim_q_t2[:, 3] = Vf7[250,::nn,::nn].flatten(); sim_q_t2[:, 4] = np.sqrt(sim_q_t2[:, 2]**2 + sim_q_t2[:, 3]**2)
-sim_q_t3[:, 0] = Xf7[::nn,::nn].flatten(); sim_q_t3[:, 1] = Yf7[::nn,::nn].flatten(); sim_q_t3[:, 2] = Uf7[375,::nn,::nn].flatten(); sim_q_t3[:, 3] = Vf7[375,::nn,::nn].flatten(); sim_q_t3[:, 4] = np.sqrt(sim_q_t3[:, 2]**2 + sim_q_t3[:, 3]**2)
-sim_q_t4[:, 0] = Xf7[::nn,::nn].flatten(); sim_q_t4[:, 1] = Yf7[::nn,::nn].flatten(); sim_q_t4[:, 2] = Uf7[ -1,::nn,::nn].flatten(); sim_q_t4[:, 3] = Vf7[ -1,::nn,::nn].flatten(); sim_q_t4[:, 4] = np.sqrt(sim_q_t4[:, 2]**2 + sim_q_t4[:, 3]**2)
-
-np.savetxt(DIR2 + 'sim_q_t0.csv', sim_q_t0, fmt='%.16f', delimiter=' ', header='x y u v m', comments="") # Save data
-np.savetxt(DIR2 + 'sim_q_t1.csv', sim_q_t1, fmt='%.16f', delimiter=' ', header='x y u v m', comments="") # Save data
-np.savetxt(DIR2 + 'sim_q_t2.csv', sim_q_t2, fmt='%.16f', delimiter=' ', header='x y u v m', comments="") # Save data
-np.savetxt(DIR2 + 'sim_q_t3.csv', sim_q_t3, fmt='%.16f', delimiter=' ', header='x y u v m', comments="") # Save data
-np.savetxt(DIR2 + 'sim_q_t4.csv', sim_q_t4, fmt='%.16f', delimiter=' ', header='x y u v m', comments="") # Save data
-
-#%% Testing quivers
-# import matplotlib.pyplot as plt
-# nn=2
-# fig, axs = plt.subplots(5, 2, figsize=(6, 6), sharex=True, sharey=True)
-# axs[0, 0].imshow(np.sqrt(U1[0] ** 2 + V1[0] ** 2), extent=[0, 1, 0, 1])
-# axs[0, 0].quiver(X2[::nn,::nn], Y2[::nn,::nn], U2[0,::nn,::nn], V2[0,::nn,::nn])
-# axs[0,1] = plt.gca(projection='3d')
-# axs[0,1].plot_surface(X2, Y2, H2[0])
-# #axs[0, 1].imshow(H2[125], extent=[0, 1, 0, 1])
-
-
-# # axs[0, 0].imshow(H2[125], extent=[0, 1, 0, 1])
-# # axs[0, 0].quiver(X2[::nn,::nn], Y2[::nn,::nn], U2[125,::nn,::nn], V2[125,::nn,::nn])
-# # axs[0, 1].imshow(H2[250], extent=[0, 1, 0, 1])
-# # axs[0, 1].quiver(X2[::nn,::nn], Y2[::nn,::nn], U2[250,::nn,::nn], V2[250,::nn,::nn])
-# # axs[1, 0].imshow(H2[375], extent=[0, 1, 0, 1])
-# # axs[1, 0].quiver(X2[::nn,::nn], Y2[::nn,::nn], U2[375,::nn,::nn], V2[375,::nn,::nn])
-# # axs[1, 1].imshow(H2[ -1], extent=[0, 1, 0, 1])
-# # axs[1, 1].quiver(X2[::nn,::nn], Y2[::nn,::nn], U2[ -1,::nn,::nn], V2[ -1,::nn,::nn])
-
-# for ax in axs.flat:
-#     ax.set(xlabel=r'$x$', ylabel=r'$y$')
-    
-# for ax in axs.flat:
-#     ax.label_outer()
-    
-# plt.show()
-
-# #%%
-# import matplotlib.pyplot as plt
-# nn=2
-# fig, axs = plt.subplots(2, 2, figsize=(6, 6), sharex=True, sharey=True)
-# #axs[0].imshow(H2[0], extent=[0, 1, 0, 1])
-# #axs[0].quiver(X2[::nn,::nn], Y2[::nn,::nn], U2[0,::nn,::nn], V2[0,::nn,::nn])
-# axs[0,0].imshow(H2[125], extent=[0, 1, 0, 1])
-# axs[0,0].quiver(X2[::nn,::nn], Y2[::nn,::nn], U2[125,::nn,::nn], V2[125,::nn,::nn])
-# axs[0,1].imshow(H2[250], extent=[0, 1, 0, 1])
-# axs[0,1].quiver(X2[::nn,::nn], Y2[::nn,::nn], U2[250,::nn,::nn], V2[250,::nn,::nn])
-# axs[1,0].imshow(H2[375], extent=[0, 1, 0, 1])
-# axs[1,0].quiver(X2[::nn,::nn], Y2[::nn,::nn], U2[375,::nn,::nn], V2[375,::nn,::nn])
-# axs[1,1].imshow(H2[ -1], extent=[0, 1, 0, 1])
-# axs[1,1].quiver(X2[::nn,::nn], Y2[::nn,::nn], U2[ -1,::nn,::nn], V2[ -1,::nn,::nn])
-
-# for ax in axs.flat:
-#     ax.set(xlabel=r'$x$', ylabel=r'$y$')
-    
-# for ax in axs.flat:
-#     ax.label_outer()
-    
-# plt.show()
-
+header_ = 'x y u_0 v_0 m0 u_10 v_10 m10 u_20 v_20 m20 u_30 v_30 m30 u_40 v_40 m40'
+np.savetxt(DIR2 + 'sv_c_v_2D_vf.csv', data_vf, fmt='%.16f', delimiter=' ', header=header_, comments="")
 

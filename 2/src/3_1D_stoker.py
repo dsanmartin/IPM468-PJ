@@ -45,7 +45,7 @@ def u_(x, t, x0, c0, cm, xA, xB, xC):
   return o
 
 xA_ = lambda t, c0, x0: x0 - c0 * t
-xB_ = lambda t, um, cm, x0: x0 + 2 * (um - cm) * t
+xB_ = lambda t, um, cm, x0: x0 + (um - cm) * t
 xC_ = lambda t, vc, x0: x0 + vc * t
   
 #%% Analytic
